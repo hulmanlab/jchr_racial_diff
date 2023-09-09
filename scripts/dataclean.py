@@ -5,7 +5,7 @@ Spyder Editor
 This is a temporary script file.
 """
 import pandas as pd
-import datetime
+# import datetime
 #%% load data
 df = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FDataCGM.txt',sep='|')
 df.drop(columns=['RecID','SiteID','FileUniqueRecID'], inplace = True)
@@ -37,14 +37,6 @@ df_value_counts['Datapoints'] = df_sorted['PtID'].value_counts()
 df_value_counts['Days'] = df_value_counts['Datapoints']/24/4
 
 
-#%% patient extraction
-df_unique = df['PtID'].unique()
-df_one = df[df['PtID']==df_unique[0]] #179
-
-
- 
-#%%
-df_datatypes = df.dtypes # check for datatypes in df columns
 
 
 
