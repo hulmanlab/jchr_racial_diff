@@ -19,3 +19,4 @@ df_feature_cnn = feature_extraction_cnn(df,window_size=4, prediction_horizon=4, 
 # remember to change name to something meaningful
 # df_feature_cnn.to_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/cnn_ws60min_ph60min.csv', index=False) # takes forever, maybe try with chunk_size = 10000 next time
 print('finished')
+
