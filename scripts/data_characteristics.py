@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Spyder Editor
+- Load all data from the study.
+- groups patients and counts them
+- plots data
 
-This is a temporary script file.
 """
 import pandas as pd
 import datetime
@@ -81,7 +82,7 @@ df_final_status = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_dif
 # # meal data
 # df_daily_log = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FDailyLog.txt', sep='|')
 
-#%% count
+#%% count groups
 
 count_sex_female = (df_baseline['Gender'] == "F").sum()
 count_sex_male = (df_baseline['Gender'] == "M").sum()

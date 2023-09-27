@@ -5,7 +5,7 @@ Created on Thu Sep 21 13:53:43 2023
 
 @author: Helene
 
-Loads CGM data and fills in all the missing Datetime values for each patient with NaN
+Load CGM data and fill in all the missing Datetime values for each patient with NaN
 
 """
 

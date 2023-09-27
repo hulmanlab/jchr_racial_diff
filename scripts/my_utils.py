@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Sep 21 13:48:02 2023
-
 @author: au605715
-"""
 
-"""
 contains all the functions made by me, Helene Thomsen
 """
 

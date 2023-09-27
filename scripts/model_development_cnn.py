@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep 18 09:43:59 2023
-
-@author: au605715
+ - runs ML-models
+ - uses keras
+ - still a work in progress
 """
 
 import pandas as pd
