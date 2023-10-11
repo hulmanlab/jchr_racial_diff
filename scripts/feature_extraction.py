@@ -11,10 +11,22 @@ from my_utils import feature_extraction_cnn
 #%% import data
 df = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/racial_diff_dataclean.csv')
 
+df_roster = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FPtRoster.txt', sep='|')
+df_roster.drop(columns=['RecID','SiteID'], inplace = True)
+df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic Black', 'black')
+df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic White', 'white')
+df_roster.rename(columns={'RaceProtF':"Race"}, inplace=True)
+
 #%% cnn
 
 # create sample of 1 hour and prediction horizon of 1 hourho
 df_feature_cnn = feature_extraction_cnn(df,window_size=4, prediction_horizon=4, col_patient_id='PtID', col_glucose='CGM')
+
+
+#%% add ethnicity
+df_race = pd.DataFrame(data=[df_roster['PtID'],df_roster['Race']]).transpose()
+df_feature_cnn = pd.merge(df_feature_cnn, df_race, on='PtID', how='left')
+
 #%% For saving dataframes
 # remember to change name to something meaningful
 # df_feature_cnn.to_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/cnn_ws60min_ph60min.csv', index=False) # takes forever, maybe try with chunk_size = 10000 next time
