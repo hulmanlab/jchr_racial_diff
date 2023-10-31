@@ -14,22 +14,13 @@ Helene is testing stuff
 
 import pandas as pd
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Dropout, BatchNormalization
-from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
 import matplotlib.pyplot as plt
-from collections import Counter
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+# from sklearn.model_selection import StratifiedGroupKFold, GroupKFold
+from my_utils import get_groupShuflesplit_equal_groups, change_trainingset, get_cnn1d_input, create_cnn
 import tensorflow as tf
-from sklearn.model_selection import GridSearchCV
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense
-from sklearn.model_selection import StratifiedGroupKFold, GroupKFold
-from my_utils import get_groupShuflesplit_by_group
-from sklearn.model_selection import GroupShuffleSplit
-import logging
 #%%                     load data
-df = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/cnn_ws60min_ph60min.csv')
+df = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data//cnn_ws60min_ph60min.csv')
 df.dropna(inplace=True)
 
 #%%                     splitting patients in ethnicity
@@ -41,133 +32,235 @@ df_unique = df['PtID'].unique()
 df_unique_white = df_white['PtID'].unique()
 df_unique_black = df_black['PtID'].unique()
 
-#%%                     divide data
-def get_X_y_groups_race(data):
-    FEATURES = [
-        "Value_1",
-        "Value_2",
-        "Value_3",
-        "Value_4",
-        "Target"
-        ]
+
+#%%
+race = "wb"
+iterations = 1
+
+# Initialize empty arrays to store results
+test_loss_array_w = np.zeros(iterations)
+test_mse_array_w = np.zeros(iterations)
+custom_mae_array_w = np.zeros(iterations)
+baseline_mae_array_w = np.zeros(iterations)
+baseline_mse_array_w = np.zeros(iterations)
+
+test_loss_array_b = np.zeros(iterations)
+test_mse_array_b = np.zeros(iterations)
+custom_mae_array_b = np.zeros(iterations)
+baseline_mae_array_b = np.zeros(iterations)
+baseline_mse_array_b = np.zeros(iterations)
+
+histories_saved = []
+
+for i in range(iterations):
+    print("Iteration:", i + 1)
+    #%%                     split data
+    # split train-validate set and test set (hold-out set)
+    train, test = get_groupShuflesplit_equal_groups(df_white, df_black, test_size=0.10, random_state=42, show_distribution=False, equal_PtID=True, seperate_target=False)
+    test_w = test[test['Race']=='white']
+    test_b = test[test['Race']=='black']
     
-    GROUPS = "PtID"
+    x_test_w = test_w.drop(['Target', 'PtID', 'Race'], axis=1)
+    x_test_b = test_b.drop(['Target', 'PtID', 'Race'], axis=1)
     
-    TARGET = "Target"
+    y_test_w = test_w['Target']
+    y_test_b = test_b['Target']
     
-    RACE = "Race"
+    # get data for training and validating
+    x_train, y_train, x_val, y_val = change_trainingset(train, race=race, test_size=0.10, random_state=42, equal_PtID=True, show_distribution=False)
     
-    X = data[FEATURES]
-    y = data[TARGET]
-    race = data[RACE]
-    groups = data[GROUPS]
+    #%%                     reshape input for model
     
-    return X, y, groups, race
-df_X, df_y, df_groups, df_race = get_X_y_groups_race(df)
-
-#%%                     split data
-
-#split train-validate set and test set (hold-out set)
-train, test = get_groupShuflesplit_by_group(df_white, df_black, test_size=0.10, random_state=42, show_distribution=True, equal_PtID=True)
-x_test = test.drop(['Target','Race'], axis=1)
-
-# FINE-TUNED MODEL split white people dataset for training
-train_w = train[train['Race'] == 'white'].drop(labels = 'Race', axis = 1)
-gss = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=42)
-train_idx, test_idx = next(gss.split(train_w, groups=train_w['PtID']))
-
-# Create train and test sets
-x_train, y_train = train_w.drop(['Target','PtID'], axis=1).iloc[train_idx], train_w['Target'].iloc[train_idx]
-x_val, y_val = train_w.drop(['Target','PtID'], axis=1).iloc[test_idx], train_w['Target'].iloc[test_idx]
-
-
-#%%                     Define the model architecture
-def create_cnn(my_input_shape):
-    model = tf.keras.Sequential([
-        Conv1D(32, 3, activation='relu', input_shape=my_input_shape),
-        MaxPooling1D(),
-        Flatten(),
-        Dense(32, activation='relu'),
-        Dense(1, activation='linear')
-    ])
-    # Compile the model
-    model.compile(optimizer='adam',
-                  loss='mean_squared_error',
-                  metrics=['mean_absolute_error'])
+    x_train = get_cnn1d_input(x_train)
+    x_val = get_cnn1d_input(x_val)
+    x_test_w = get_cnn1d_input(x_test_w)
+    x_test_b = get_cnn1d_input(x_test_b)
     
-    return model
+    #%%                     Define the model architecture
+    
+    # Define early stopping callback¢
+    early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    
+    #%%                     model and evaluation
+    model = create_cnn((x_train.shape[1],1))
+    history = model.fit(x_train, y_train, epochs=60, batch_size=64, validation_data=(x_val, y_val), callbacks=[early_stop])
+    
+    
+    # model_save_name = f'/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_{iterations}iter_{race}/cnn_{iterations}iter_{race}_CNN_{i}.h5'
+    # model.save(model_save_name) 
+
+    #%%                     Plot training & validation loss
+    histories_saved.append(history)
+    
+
+    # print(history.history.keys()) # print history
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend(['Train', 'Validation'], loc='upper right')
+    plt.grid(True)
+    plt.show()
 
 
-# Define early stopping callback¢
-early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    #%%                     Get results
+    # Evaluate the model
+    test_loss_w, test_mse_w = model.evaluate(x_test_w, y_test_w)
+    test_loss_b, test_mse_b = model.evaluate(x_test_b, y_test_b)
+    # Calculate your custom MSE
+    y_pred_test_w = model.predict(x_test_w)
+    y_pred_test_b = model.predict(x_test_b)
+    # my_mse = mean_squared_error(y_pred_test, y_test) # same as the one from evaluate test_mse_n
+    my_mae_w = mean_absolute_error(y_pred_test_w, y_test_w)
+    my_mae_b = mean_absolute_error(y_pred_test_b, y_test_b)
+    
+    
+    # Calculate baseline metrics
+    sliced_array_w = x_test_w[:, :, 0]
+    sliced_array_b = x_test_b[:, :, 0]
+    x_test_w_df = pd.DataFrame(sliced_array_w)
+    x_test_b_df = pd.DataFrame(sliced_array_b)
+    x_test_w_df.columns = ['Value_1', 'Value_2', 'Value_3', 'Value_4']
+    x_test_b_df.columns = ['Value_1', 'Value_2', 'Value_3', 'Value_4']
+    mse_w = mean_squared_error(x_test_w_df['Value_4'], y_test_w)
+    mse_b = mean_squared_error(x_test_b_df['Value_4'], y_test_b)
+    mae_w = mean_absolute_error(x_test_w_df['Value_4'], y_test_w)
+    mae_b = mean_absolute_error(x_test_b_df['Value_4'], y_test_b)
+  
+    test_loss_array_w[i] = test_loss_w
+    test_mse_array_w[i] = test_mse_w
+    custom_mae_array_w[i] = my_mae_w
+    baseline_mse_array_w[i] = mse_w
+    baseline_mae_array_w[i] = mae_w
+    
+    test_loss_array_b[i] = test_loss_b
+    test_mse_array_b[i] = test_mse_b
+    custom_mae_array_b[i] = my_mae_b
+    baseline_mse_array_b[i] = mse_b
+    baseline_mae_array_b[i] = mae_b
 
-#%%                     reshape input for model
+df_test_results_w = pd.DataFrame({
+  
+    'Loss w': test_loss_array_w,
+    'MSE w': test_mse_array_w,
+    'MSE base w': baseline_mse_array_w,
+    'MAE w': custom_mae_array_w,
+    'MAE base w': baseline_mae_array_w
+})
 
-#reshape input
-x_train = x_train.values.reshape((x_train.shape[0], x_train.shape[1], 1))
-x_val = x_val.values.reshape((x_val.shape[0], x_val.shape[1], 1))
-
-#%%                     model and evaluation
-model = create_cnn((x_train.shape[1],1))
-
-history = model.fit(x_train, y_train, epochs=100, batch_size=64, validation_data=(x_val, y_val), callbacks=[early_stop])
-
-
-# Plot training & validation loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('Model loss')
-plt.ylabel('Loss')
-plt.xlabel('Epoch')
-plt.legend(['Train', 'Validation'], loc='upper right')
-plt.show()
+df_test_results_b = pd.DataFrame({
+  
+    'Loss B': test_loss_array_b,
+    'MSE B': test_mse_array_b,
+    'MSE base B': baseline_mse_array_b,
+    'MAE B': custom_mae_array_b,
+    'MAE base B': baseline_mae_array_b
+})
 
 
-# if I want to log the training and validation loss
-# logging.info("Training Loss:", history.history['loss'])
-# logging.info("Validation Loss:", history.history['val_loss'])
+#%%
+# Save dataframe as CSV file
 
-x_test = test.drop(['Target', 'PtID', 'Race'], axis=1).values.reshape((test.shape[0], x_train.shape[1], 1))
-y_test = test['Target']
+# Create empty lists to store data
+epochs = []
+loss_values = []
+mse_values = []
+val_loss_values = []
+val_mse_values = []
+epoch_id = []
 
-test_loss, test_mae = model.evaluate(x_val, y_val)
-print(f"Test Loss: {test_loss}, Test MAE: {test_mae}")
+# Initialize the epoch_id
+current_epoch_id = 1
+
+# Iterate through the list of History objects
+for h in histories_saved:  # Assuming 'history_list' is your list of History objects
+    # Extract data from the current History object
+    current_epochs = np.arange(len(history.history['loss'])) + 1
+    current_loss = history.history['loss']
+    current_mse = history.history['mean_squared_error']
+    current_val_loss = history.history['val_loss']
+    current_val_mse = history.history['val_mean_squared_error']
+
+    # Append the data to the respective lists
+    epochs.extend(current_epochs)
+    loss_values.extend(current_loss)
+    mse_values.extend(current_mse)
+    val_loss_values.extend(current_val_loss)
+    val_mse_values.extend(current_val_mse)
+
+    # Create the epoch_id array to mark the start of each epoch
+    epoch_id.extend([current_epoch_id] * len(current_epochs))
+
+    # Increment the epoch ID for the next epoch
+    current_epoch_id += 1
+
+# Create a DataFrame from the lists
+df_loss = pd.DataFrame({
+    'Epoch ID': epoch_id,
+    'Epoch': epochs,
+    'Loss': loss_values,
+    'MSE': mse_values,
+    'Val Loss': val_loss_values,
+    'Val MSE': val_mse_values
+})
+
+#%%
+# df_test_results_w.to_csv(f'/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_{iterations}iter_{race}/cnn_{iterations}iter_{race}_test_resulsts_w.csv', index=False)
+
+# df_test_results_b.to_csv(f'/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_{iterations}iter_{race}/cnn_{iterations}iter_{race}_test_resulsts_b.csv', index=False) 
+
+# df_loss.to_csv(f'/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_{iterations}iter_{race}/cnn_{iterations}iter_{race}_history_list.csv', index=False)
+
+#%%
+
+df_y_w = pd.DataFrame({
+    'y_test_w': test_w['Target'],
+})
+df_y_w['y_pred_w'] = y_pred_test_w
+
+
+
+df_y_b = pd.DataFrame({
+    'y_test_b': test_b['Target'],
+})
+df_y_b['y_pred_b'] = y_pred_test_b
+
+df_y_w.reset_index(drop=True, inplace=True)
+df_y_b.reset_index(drop=True, inplace=True)
+
+# df_y_w.to_csv(f'/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_{iterations}iter_{race}_test_w_y_pred_w.csv', index=False)
+# df_y_b.to_csv(f'/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_{iterations}iter_{race}_test_b_y_pred_b.csv', index=False) 
+
+#%%# Load the best weights from a file
+# loaded_weights = np.load('/Users/au605715/Documents/GitHub/jchr_racial_diff/results/best_model_weights.npy', allow_pickle=True)
+
+# # Set the model's weights to the loaded values
+# model.set_weights(loaded_weights)
 
 
 
 #%%
+# f = open('/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_200iter_b_best_weights.txt', "a")
+# f.write(str(best_weights_list))
+# list_of_dicts = [{"column_name_1": arr} for arr in list_of_arrays]
 
-for i in range(2):
-    print("Iteration:", i + 1)
+# df = pd.DataFrame(list_of_dicts)
 
+#%%
+# f.close()
 
-#%%                     reshaping feature matrix adding a dimension 
+# #%%
+# with open('/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_200iter_b_best_weights.txt', "r") as file:
+#     # Read the content from the file
+#     content = file.read()
 
+# # Assuming the content is a string representing a list, you can use eval to convert it back to a Python list
+# reloaded_list = eval(content)
 
-# # Evaluate the model on the test data
-# test_mse, test_mae = model.evaluate(x_val, y_val)
-# print('mean squarred error', test_mse)
-# print('mean absolute error', test_mae)
+# # Now you can use reloaded_list as a Python list
+# print(reloaded_list)
 
-# #%% simple baseline
-# x_test, y_test = df.drop(['Target','PtID'], axis=1).iloc[test_idx], df['Target'].iloc[test_idx]
-# mae = mean_absolute_error(x_test['Value_4'], y_test)
-# mse = mean_squared_error(x_test['Value_4'], y_test)
-# print('mean squarred error', mse)
-# print('mean absolute error', mae)
+#%%from keras.models import load_model
 
-
-
-
-# Plot training and validation loss
-plt.plot(history.history['loss'], label='Training Loss')
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.legend()
-plt.show()
-
-
-
-
-
-
- 
+# model.save(f'/Users/au605715/Documents/GitHub/jchr_racial_diff/results/cnn_200iter_b_CNN_.h5')  # creates a HDF5 file 'my_model.h5'
