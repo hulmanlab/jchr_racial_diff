@@ -126,7 +126,7 @@ def feature_extraction_cnn(df, window_size, prediction_horizon, col_patient_id =
     return df_final
 
 #%% Split data
-def get_groupShuflesplit_by_group(df_group1, df_group2, test_size=0.10, random_state=42, show_distribution=False, equal_PtID=True):
+def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, random_state=None, show_distribution=False, equal_PtID=True, seperate_target=True):
     """
     Description
     ----------
@@ -147,14 +147,19 @@ def get_groupShuflesplit_by_group(df_group1, df_group2, test_size=0.10, random_s
         Creates bar plot. The default is False.
     equal_PtID : TRUE/FALSE, optional
         makes equal distribution of each patientgroup in test set . The default is True.
+    seperate_target: TRUE/FALSE, optional
+        changes number of output variables. Divides train, test in x_train, y_train, x_test, y_test.
 
 
     Returns
     -------
     TYPE
         Dataframes
-        * training data
-        * test data
+        * x_train = training
+        * y_train = target to x_train
+        * x_test = testing
+        * y_test = target to x_test
+        * test
     If show_distribution = TRUE you also get their distributions in datatype Series
     
 
@@ -275,4 +280,164 @@ def get_groupShuflesplit_by_group(df_group1, df_group2, test_size=0.10, random_s
         # Show the plot
         plt.show()
         # return train, test, train_distribution, test_distribution
+    if seperate_target:
+        x_train = train.drop(['Target', 'PtID', 'Race'], axis=1)
+        y_train = train['Target']
+        x_test = test.drop(['Target', 'PtID', 'Race'], axis=1)
+        y_test = test['Target']
+    
+        return  x_train, y_train, x_test, y_test
     return train, test
+
+def change_trainingset(train, race, test_size, random_state=None, equal_PtID = True, show_distribution=False):
+    """
+    Description
+    -----------
+    split input in train and validation
+    depending on race-based-input, different parts of input comes out
+
+    Parameters
+    ----------
+    train : DataFrame
+        DESCRIPTION.
+    race : Boolean
+        valid_inputs = ["w", "b", "wb"]
+    test_size : Float
+        can also be validation_size, the rest automatically turns into training
+    random_state : keep same split?, optional
+        default None, else a number eg. 42
+    show_distribution : TYPE, optional
+        Only relevant for wb
+        Shows the difference between the two groups b and w
+    equal_PtID : TYPE, optional
+        DESCRIPTION. The default is True.
+
+    Raises
+    ------
+    ValueError
+        Input not understood, see 'race' under 'parameters'
+
+    Returns
+    -------
+    x_train DataFrame
+    y_train DataFrame
+    x_val   DataFrame
+    y_val   DataFrame
+
+    """
+    from sklearn.model_selection import GroupShuffleSplit
+    valid_inputs = ["w", "b", "wb"]
+    if race == "w":                                                             # split white people dataset for training
+        train_w = train[train['Race'] == 'white'].drop(labels = 'Race', axis = 1)
+
+        gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
+        train_idx, test_idx = next(gss.split(train_w, groups=train_w['PtID']))
+
+        # Create train and test sets
+        x_train_w, y_train_w = train_w.drop(['Target','PtID'], axis=1).iloc[train_idx], train_w['Target'].iloc[train_idx]
+        x_val_w, y_val_w = train_w.drop(['Target','PtID'], axis=1).iloc[test_idx], train_w['Target'].iloc[test_idx]
+        
+        return x_train_w, y_train_w, x_val_w, y_val_w
+    
+    elif race == "b":                                                            # split black people dataset for training
+        train_b = train[train['Race'] == 'black'].drop(labels = 'Race', axis = 1)
+        gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
+        train_idx, test_idx = next(gss.split(train_b, groups=train_b['PtID']))
+
+        # # Create train and test sets
+        x_train_b, y_train_b = train_b.drop(['Target','PtID'], axis=1).iloc[train_idx], train_b['Target'].iloc[train_idx]
+        x_val_b, y_val_b = train_b.drop(['Target','PtID'], axis=1).iloc[test_idx], train_b['Target'].iloc[test_idx]
+        
+        return x_train_b, y_train_b, x_val_b, y_val_b
+    
+    elif race == "wb":
+        train_b = train[train['Race'] == 'black']
+        train_w = train[train['Race'] == 'white']
+
+        x_train_wb,y_train_wb, x_val_wb, y_val_wb  = get_groupShuflesplit_equal_groups(train_w, train_b, test_size=test_size, random_state=random_state, show_distribution=show_distribution, equal_PtID=equal_PtID)
+        return x_train_wb,y_train_wb, x_val_wb, y_val_wb
+    else:
+        raise ValueError("Input not understood. Please provide one of the following options: " + ", ".join(valid_inputs))
+
+#reshape input
+def get_cnn1d_input (x_data):
+    """
+    Descriptions
+    ------------
+    reshapes time series input into a shape that cnn1D cant take
+    Parameters
+    ----------
+    x_data : DataFrames
+        training data
+
+    Returns
+    -------
+    x_train_reshape : array of floats
+        N x l_window x 1
+
+    """
+    x_train_reshape = x_data.values.reshape((x_data.shape[0], x_data.shape[1], 1))
+    return x_train_reshape
+
+def get_rnn_input (x_data):
+    """
+    Descriptions
+    ------------
+    reshapes time series input into a shape that cnn1D cant take
+    Parameters
+    ----------
+    x_data : DataFrames
+        training data
+
+    Returns
+    -------
+    x_train_reshape : array of floats
+        N x l_window x 1
+
+    """
+    x_train_reshape = x_data.values.reshape(-1, x_data.shape[1], 1)
+    return x_train_reshape
+
+def create_cnn(my_input_shape):
+    from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Dropout, BatchNormalization
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense
+    import tensorflow as tf
+    from tensorflow import keras
+    
+    model = tf.keras.Sequential([
+        Conv1D(32, 3, activation='relu', input_shape=my_input_shape),
+        BatchNormalization(),
+        MaxPooling1D(),
+        Flatten(),
+        Dense(32, activation='relu'),
+        Dense(1, activation='linear')
+    ])
+    # Compile the model
+    optimizer = keras.optimizers.Adam(learning_rate=0.001)
+    model.compile(optimizer=optimizer,
+                  loss='mean_squared_error', 
+                  metrics=['mean_squared_error'])
+    
+    return model
+
+
+
+# def create_rnn(my_input_shape):
+#     from tensorflow.keras.models import Sequential
+#     from tensorflow.keras.layers import SimpleRNN, Dense
+#     from tensorflow import keras
+#     model = Sequential([
+#         SimpleRNN(32, input_shape=(4, 1), activation='tanh'),
+#         # BatchNormalization(),
+#         Dense(1)
+#     ])
+#     # from tensorflow.keras.layers import LSTM, Dense
+#     # model = Sequential([
+#     #     LSTM(32, input_shape=(4, 1), activation='tanh'),
+#     #     Dense(1)
+#     # ])
+    
+    
+#     model.compile(optimizer='adam', loss='mean_squared_error')
+#     return model
