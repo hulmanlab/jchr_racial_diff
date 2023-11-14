@@ -20,7 +20,7 @@ df_roster.rename(columns={'RaceProtF':"Race"}, inplace=True)
 #%% cnn
 
 # create sample of 1 hour and prediction horizon of 1 hourho
-# df_feature_cnn = feature_extraction_cnn(df,window_size=4, prediction_horizon=8, col_patient_id='PtID', col_glucose='CGM')
+df_feature_cnn = feature_extraction_cnn(df,window_size=4, prediction_horizon=8, col_patient_id='PtID', col_glucose='CGM')
 
 # df_feature_cnn = feature_extraction_cnn(df,window_size=8, prediction_horizon=12, col_patient_id='PtID', col_glucose='CGM')
 # df_feature_cnn_unique = df_feature_cnn.PtID.unique()
@@ -31,6 +31,10 @@ df_feature_cnn = pd.merge(df_feature_cnn, df_race, on='PtID', how='left')
 
 #%% For saving dataframes
 # remember to change name to something meaningful
-df_feature_cnn.to_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/cnn_ws120min_ph60min.csv', index=False) # takes forever, maybe try with chunk_size = 10000 next time
-print('finished')
+# df_feature_cnn.to_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/cnn_ws120min_ph60min.csv', index=False) # takes forever, maybe try with chunk_size = 10000 next time
+# print('finished')
+
+
+
+
 

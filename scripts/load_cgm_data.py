@@ -7,6 +7,7 @@ Created on Thu Sep 21 13:53:43 2023
 
 Load CGM data and fill in all the missing Datetime values for each patient with NaN
 
+
 """
 
 import pandas as pd
@@ -83,7 +84,7 @@ df_dataclean = df_dataclean.reset_index(drop=True)
 
 nan_count = df_dataclean.isna().sum().sum()
 
-# how much data per person?
+#%% how much data per person?
 df_value_counts = pd.DataFrame()
 df_value_counts['Datapoints'] = df['PtID'].value_counts()
 
@@ -92,6 +93,47 @@ df_value_counts['Days'] = df_value_counts['Datapoints']/24/4
 numb_total_days = df_value_counts['Days'].sum()
 numb_days_df_dataclean = (len(df_dataclean)-nan_count)/24/4
 
+df_value_counts['Weeks'] = df_value_counts['Datapoints']/24/4/7
+
+df_value_counts=df_value_counts.reset_index()
+
+
+
+
+df_roster = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FPtRoster.txt', sep='|')
+df_roster= df_roster[df_roster['FPtStatus'] != 'Dropped']
+df_roster.drop(columns=['RecID','SiteID','FPtStatus'], inplace = True)
+df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic Black', 'black')
+df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic White', 'white')
+df_roster.rename(columns={'RaceProtF':"Race"}, inplace=True)
+
+
+df_counts = pd.merge(df_value_counts, df_roster, on='PtID')
+df_counts['Days_round']=round(df_counts.Days)
+
+df_count_w = df_counts [df_counts ['Race'] == 'white']
+df_count_b = df_counts [df_counts ['Race'] == 'black']
+
+
+value_counts = df_counts['Days_round'].value_counts().sort_index()
+
+df_test = pd.DataFrame(value_counts)
+import matplotlib.pyplot as plt
+
+# Plotting
+plt.figure(figsize=(16, 6))  # You can adjust the dimensions as needed
+value_counts.plot(kind='bar')
+plt.xticks(rotation=45)  # Rotates labels to 45 degrees
+plt.xlabel('Number of Days (rounded values)')
+plt.ylabel('Number of Patients')
+# plt.title('Frequency of Each Unique Value in the Column')
+plt.show()
+
 #%% export files
 
 # df_dataclean.to_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/racial_diff_dataclean.csv', index=False)
+
+# df_value_counts.to_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/racial_diff_numb_days.csv', index=False)
+
+
+#%%
