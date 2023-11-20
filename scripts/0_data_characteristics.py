@@ -207,3 +207,29 @@ plt.xticks(rotation=45)
 
 plt.show()
 
+
+
+#%%
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(20, 6), dpi=300)  # 10x6 inches figure with 300 DPI
+
+# Creating the histogram
+plt.hist(df_cgm['CGM'], bins=100, edgecolor='black')  # 'bins' defines the number of intervals or "buckets"
+
+# Adding title and labels
+plt.title('CGM Data Distribution')
+plt.xlabel('Blood Glucose Level (mmol/L)')
+plt.ylabel('Frequency')
+
+# Customizing x-axis ticks
+min_value = min(df_cgm['CGM'])
+max_value = max(df_cgm['CGM'])
+tick_interval = 1.0  # Adjust as needed for appropriate granularity
+ticks = np.arange(min_value, max_value + tick_interval, tick_interval)
+plt.xticks(ticks)
+
+
+# Displaying the plot
+plt.show()

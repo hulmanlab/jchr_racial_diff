@@ -56,7 +56,7 @@ for i in range(iterations):
     print("Iteration:", i + 1)
     #%%                     split data
     # split train-validate set and test set (hold-out set)
-    train, test = get_groupShuflesplit_equal_groups(df_white, df_black, test_size=0.10, random_state=42, show_distribution=False, equal_PtID=True, seperate_target=False)
+    train, test = get_groupShuflesplit_equal_groups(df_white, df_black, test_size=0.10, random_state=42, show_distribution=True, equal_PtID=True, seperate_target=False)
     test_w = test[test['Race']=='white']
     test_b = test[test['Race']=='black']
     

@@ -125,7 +125,86 @@ def feature_extraction_cnn(df, window_size, prediction_horizon, col_patient_id =
     df_final = pd.concat(temp_list_of_dfs, ignore_index=True)
     return df_final
 
+
+
+#%% 3.preprocess_splitting_PtID
+def get_group_id(df,id_column, group_column, group1, group2):
+    """
+    get 2 lists with the unique PtIDs from you dataframe
+
+    Parameters
+    ----------
+    df : data
+    group_column : String
+
+    group1 : String
+        
+    group2 : String
+
+
+    Returns
+    -------
+    gr1_unique_id : int64array
+    
+    gr2_unique_id : int64array
+
+    """
+
+    df_gr1  = df[df[group_column] == group1]
+    df_gr2 = df[df[group_column] == group2]
+    
+    gr1_unique_id  = df_gr1[id_column].unique()
+    gr2_unique_id = df_gr2[id_column].unique()
+    
+    return gr2_unique_id, gr1_unique_id
+
+
+
+
+def combine_arrays_w_percentage(array1, array2, percentage):
+    """
+    Takes the specified percentage of array1
+    and the left over percentages from array2 randomly
+    and combines them
+    
+
+    Parameters
+    ----------
+    array1 : Array of int64
+        
+    array2 : Array of int64
+        
+    percentage : integer
+        0-100
+  
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    """
+    
+    import numpy as np
+
+    # Calculate the number of elements to take from each array
+    num_from_array1 = int(len(array1) * (percentage / 100))
+    num_from_array2 = int(len(array2) * ((100 - percentage) / 100))
+
+    # Randomly select elements from each array
+    selected_from_array1 = np.random.choice(array1, num_from_array1, replace=False)
+    selected_from_array2 = np.random.choice(array2, num_from_array2, replace=False)
+
+    # Combine and return the result
+    return np.concatenate((selected_from_array1, selected_from_array2))
+
+
+
+
 #%% Split data
+
+
+
+
 def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, random_state=None, show_distribution=False, equal_PtID=True, seperate_target=True):
     """
     Description
