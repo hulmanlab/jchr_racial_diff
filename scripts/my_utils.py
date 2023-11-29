@@ -369,8 +369,9 @@ def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_
     -------
     x_train : DataFrame
         DESCRIPTION: first values woithout removed rows
+        
     x_val : DataFrame
-        DESCRIPTION: all the bottom rows removed
+        DESCRIPTION: all the bottom rows that were removed
 
     """
     import pandas as pd
@@ -510,53 +511,33 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
     else:
         raise ValueError("Input not understood. Please provide one of the following options: " + ", ".join(valid_inputs))
         
-        
+
+def split_time_series_data(df, test_size, seperate_target=True):
+    """
+    Splits a DataFrame into training and validation sets without shuffling, preserving time order.
     
-# def plot_cv_indices(cv, X, y, group, ax, n_splits, lw=10):
-# https://scikit-learn.org/stable/auto_examples/model_selection/plot_cv_indices.html
-#     """Create a sample plot for indices of a cross-validation object."""
-#     import numpy as np
-#     import matplotlib as mpl
-#     # Generate the training/testing visualizations for each CV split
-#     for ii, (tr, tt) in enumerate(cv.split(X=X, y=y, groups=group)):
-#         # Fill in indices with the training/test groups
-#         indices = np.array([np.nan] * len(X))
-#         indices[tt] = 1
-#         indices[tr] = 0
+    :param df: Pandas DataFrame containing the time series data.
+    :param train_size: Proportion of the dataset to include in the train split (between 0 and 1).
+    :return: four datasets if seperate_target is default(True), the training set and the validation set and thei targets
+    """
 
-#         # Visualize the results
-#         ax.scatter(
-#             range(len(indices)),
-#             [ii + 0.5] * len(indices),
-#             c=indices,
-#             marker="_",
-#             lw=lw,
-#             cmap=cmap_cv,
-#             vmin=-0.2,
-#             vmax=1.2,
-#         )
+    # Assuming df is your DataFrame
+    train_size = 1-test_size
+    total_rows = len(df)
+    split_index = int(total_rows * train_size)  # 85% for training
+    
+    # Split the dataset
+    train_df = df.iloc[:split_index]
+    validation_df = df.iloc[split_index:]
+    
+    
+    if seperate_target:
+        x_train, y_train, x_test, y_test= seperate_the_target(train_df,validation_df)
+    
+        return  x_train, y_train, x_test, y_test
+    
+    return train_df, validation_df
 
-#     # Plot the data classes and groups at the end
-#     ax.scatter(
-#         range(len(X)), [ii + 1.5] * len(X), c=y, marker="_", lw=lw, cmap=cmap_data
-#     )
-
-#     ax.scatter(
-#         range(len(X)), [ii + 2.5] * len(X), c=group, marker="_", lw=lw, cmap=cmap_data
-#     )
-
-#     # Formatting
-#     yticklabels = list(range(n_splits)) + ["class", "group"]
-#     ax.set(
-#         yticks=np.arange(n_splits + 2) + 0.5,
-#         yticklabels=yticklabels,
-#         xlabel="Sample index",
-#         ylabel="CV iteration",
-#         ylim=[n_splits + 2.2, -0.2],
-#         xlim=[0, 100],
-#     )
-#     ax.set_title("{}".format(type(cv).__name__), fontsize=15)
-#     return ax
 
 
 
@@ -614,11 +595,6 @@ def create_cnn(my_input_shape):
         Dense(32, activation='relu'),
         Dense(1, activation='linear')
     ])
-    # Compile the model
-    optimizer = keras.optimizers.Adam(learning_rate=0.001)
-    model.compile(optimizer=optimizer,
-                  loss='mean_squared_error', 
-                  metrics=['mean_squared_error'])
     
     return model
 
