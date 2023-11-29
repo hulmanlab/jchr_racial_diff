@@ -67,7 +67,7 @@ df_follow_up.drop(columns=['RecID','SiteID'], inplace = True)
 # all the results from the blood tests at the visits
 df_sampleResults = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FSampleResults.txt', sep='|')
 
-#%% nload data (not relevant)
+#%% load data (not relevant)
 # # info of type of insulin each patient takes
 # df_insulin = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FInsulin.txt', sep='|')
 # df_insulin.drop(columns=['RecID','SiteID'], inplace = True)
@@ -233,3 +233,7 @@ plt.xticks(ticks)
 
 # Displaying the plot
 plt.show()
+
+
+
+df_results.Weeks.mean()

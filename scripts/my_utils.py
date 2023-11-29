@@ -126,7 +126,6 @@ def feature_extraction_cnn(df, window_size, prediction_horizon, col_patient_id =
     return df_final
 
 
-
 #%% 3.preprocess_splitting_PtID
 def get_group_id(df,id_column, group_column, group1, group2):
     """
@@ -156,9 +155,7 @@ def get_group_id(df,id_column, group_column, group1, group2):
     gr1_unique_id  = df_gr1[id_column].unique()
     gr2_unique_id = df_gr2[id_column].unique()
     
-    return gr2_unique_id, gr1_unique_id
-
-
+    return gr1_unique_id, gr2_unique_id
 
 
 def combine_arrays_w_percentage(array1, array2, percentage):
@@ -198,12 +195,7 @@ def combine_arrays_w_percentage(array1, array2, percentage):
     return np.concatenate((selected_from_array1, selected_from_array2))
 
 
-
-
 #%% Split data
-
-
-
 
 def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, random_state=None, show_distribution=False, equal_PtID=True, seperate_target=True):
     """
@@ -228,6 +220,7 @@ def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, rand
         makes equal distribution of each patientgroup in test set . The default is True.
     seperate_target: TRUE/FALSE, optional
         changes number of output variables. Divides train, test in x_train, y_train, x_test, y_test.
+        The default is True
 
 
     Returns
@@ -291,16 +284,7 @@ def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, rand
     train_distribution = train['Race'].value_counts(normalize=True)
     test_distribution = test_2['Race'].value_counts(normalize=True)
     
-    # print("Training Set Race Distribution:")
-    # print(train_distribution)
-    
-    # print("\nTesting Set or Hold Out set Race Distribution:")
-    # print(test_distribution)
-    # print(len(test_1['PtID'].unique()))
-    # print(len(test_2['PtID'].unique()))
-    
-    # print(len(test['PtID'].unique()))
-    
+
     if show_distribution:
         # test if the distribution is correct and plot
         train_distribution = train['Race'].value_counts(normalize=True)
@@ -367,6 +351,94 @@ def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, rand
     
         return  x_train, y_train, x_test, y_test
     return train, test
+
+def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_target = True):
+    """
+    Remove bottom values for each PtID
+
+    Parameters
+    ----------
+    df : DataFrame
+
+    numb_values_to_remove : int
+        DESCRIPTION. number of rows to be removed
+    PtID_column : String, optional
+        DESCRIPTION. The default is "PtID".
+
+    Returns
+    -------
+    x_train : DataFrame
+        DESCRIPTION: first values woithout removed rows
+    x_val : DataFrame
+        DESCRIPTION: all the bottom rows removed
+
+    """
+    import pandas as pd
+
+    
+    # Group the data by PtId
+    grouped = df.groupby('PtID')
+    
+    x_val = pd.DataFrame()
+    x_train = pd.DataFrame()
+    
+    # Move the last 672 rows for each PtId to the new DataFrame
+    for pt_id, group in grouped:
+        last_672_rows = group.iloc[numb_values_to_remove:]
+        first_values = group.iloc[:numb_values_to_remove]  # Remove the last 672 rows
+        x_val = pd.concat([x_val, last_672_rows])
+        x_train = pd.concat([x_train, first_values])
+    
+    if seperate_target:
+        x_train2 = x_train.drop(['Target', 'PtID', 'Race'], axis=1)
+        y_train = x_train['Target']
+        x_test = x_val.drop(['Target', 'PtID', 'Race'], axis=1)
+        y_test = x_val['Target']
+    
+        return  x_train2, y_train, x_test, y_test
+    
+    
+    return  x_train, x_val
+
+def seperate_the_target(x_train, x_val=None):
+    """
+    Split training/validatio and label variable
+
+    Parameters
+    ----------
+    x_train : DataFrame
+        DESCRIPTION.
+    x_val : DataFrame
+        DESCRIPTION.
+
+    Returns
+    -------
+    if x_val is provided:
+        x_train2 : DataFrame
+            DESCRIPTION.
+        y_train : DataFrame
+            DESCRIPTION.
+        x_test : DataFrame
+            DESCRIPTION.
+        y_test : DataFrame
+            DESCRIPTION.
+    if x_val is NOT provided:
+        x_train2 : DataFrame
+            DESCRIPTION.
+        y_train : DataFrame
+            DESCRIPTION.
+    """
+  # Process training data
+    x_train2 = x_train.drop(['Target', 'PtID', 'Race'], axis=1)
+    y_train = x_train['Target']
+
+    # Check if validation data is provided
+    if x_val is not None:
+        x_test = x_val.drop(['Target', 'PtID', 'Race'], axis=1)
+        y_test = x_val['Target']
+        return x_train2, y_train, x_test, y_test
+    else:
+        return x_train2, y_train
 
 def change_trainingset(train, race, test_size, random_state=None, equal_PtID = True, show_distribution=False):
     """
@@ -437,6 +509,56 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
         return x_train_wb,y_train_wb, x_val_wb, y_val_wb
     else:
         raise ValueError("Input not understood. Please provide one of the following options: " + ", ".join(valid_inputs))
+        
+        
+    
+# def plot_cv_indices(cv, X, y, group, ax, n_splits, lw=10):
+# https://scikit-learn.org/stable/auto_examples/model_selection/plot_cv_indices.html
+#     """Create a sample plot for indices of a cross-validation object."""
+#     import numpy as np
+#     import matplotlib as mpl
+#     # Generate the training/testing visualizations for each CV split
+#     for ii, (tr, tt) in enumerate(cv.split(X=X, y=y, groups=group)):
+#         # Fill in indices with the training/test groups
+#         indices = np.array([np.nan] * len(X))
+#         indices[tt] = 1
+#         indices[tr] = 0
+
+#         # Visualize the results
+#         ax.scatter(
+#             range(len(indices)),
+#             [ii + 0.5] * len(indices),
+#             c=indices,
+#             marker="_",
+#             lw=lw,
+#             cmap=cmap_cv,
+#             vmin=-0.2,
+#             vmax=1.2,
+#         )
+
+#     # Plot the data classes and groups at the end
+#     ax.scatter(
+#         range(len(X)), [ii + 1.5] * len(X), c=y, marker="_", lw=lw, cmap=cmap_data
+#     )
+
+#     ax.scatter(
+#         range(len(X)), [ii + 2.5] * len(X), c=group, marker="_", lw=lw, cmap=cmap_data
+#     )
+
+#     # Formatting
+#     yticklabels = list(range(n_splits)) + ["class", "group"]
+#     ax.set(
+#         yticks=np.arange(n_splits + 2) + 0.5,
+#         yticklabels=yticklabels,
+#         xlabel="Sample index",
+#         ylabel="CV iteration",
+#         ylim=[n_splits + 2.2, -0.2],
+#         xlim=[0, 100],
+#     )
+#     ax.set_title("{}".format(type(cv).__name__), fontsize=15)
+#     return ax
+
+
 
 #reshape input
 def get_cnn1d_input (x_data):
@@ -502,21 +624,21 @@ def create_cnn(my_input_shape):
 
 
 
-# def create_rnn(my_input_shape):
-#     from tensorflow.keras.models import Sequential
-#     from tensorflow.keras.layers import SimpleRNN, Dense
-#     from tensorflow import keras
-#     model = Sequential([
-#         SimpleRNN(32, input_shape=(4, 1), activation='tanh'),
-#         # BatchNormalization(),
-#         Dense(1)
-#     ])
-#     # from tensorflow.keras.layers import LSTM, Dense
-#     # model = Sequential([
-#     #     LSTM(32, input_shape=(4, 1), activation='tanh'),
-#     #     Dense(1)
-#     # ])
+def create_rnn(my_input_shape):
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import SimpleRNN, Dense
+    from tensorflow import keras
+    model = Sequential([
+        SimpleRNN(32, input_shape=(4, 1), activation='tanh'),
+        # BatchNormalization(),
+        Dense(1)
+    ])
+    # from tensorflow.keras.layers import LSTM, Dense
+    # model = Sequential([
+    #     LSTM(32, input_shape=(4, 1), activation='tanh'),
+    #     Dense(1)
+    # ])
     
     
-#     model.compile(optimizer='adam', loss='mean_squared_error')
-#     return model
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    return model

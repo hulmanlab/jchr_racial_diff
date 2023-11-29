@@ -21,7 +21,7 @@ df_roster.drop(columns=['RecID','SiteID','FPtStatus'], inplace = True)
 df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic Black', 'black')
 df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic White', 'white')
 df_roster.rename(columns={'RaceProtF':"Race"}, inplace=True)
-
+#%%
 df = df_roster
 #%%
 
@@ -31,7 +31,7 @@ id_column = "PtID"
 
 group1 = "white"
 group2 = "black"
-ratio = [90, 80, 70, 60, 50]
+ratio = [100, 90, 80, 70, 60, 50]
 df_unique_gr1, df_unique_gr2 = my_utils.get_group_id(df, id_column, group_column, group1, group2)
 # df_unique = df[id_column].unique()
     
@@ -51,7 +51,7 @@ for current_ratio in ratio:
 
         # Remove test PtID from IDs
         filtered_array_w = train_val_id_w[train_val_id_w != PtID]
-        filtered_array_b = train_val_id_b[train_val_id_b != PtID]
+        filtered_array_b = train_val_id_b[train_val_id_b != test_id_b]
         
         # Calculate the number of elements to take from each array
         num_from_array1 = int(len(filtered_array_w) * (current_ratio / 100))
@@ -62,11 +62,12 @@ for current_ratio in ratio:
         selected_from_array2 = np.random.choice(filtered_array_b, num_from_array2, replace=False)
 
         # Combine and return the result
-        combined_array = np.concatenate((selected_from_array1, selected_from_array2))
+        # combined_array = np.concatenate((selected_from_array1, selected_from_array2))
         
         dictionary[(PtID, current_ratio)] = {
             "test_b": test_id_b,
-            "training": combined_array,
+            "training_w": selected_from_array1,
+            "training_b": selected_from_array2,
             "ratio_w": current_ratio
         }
 
