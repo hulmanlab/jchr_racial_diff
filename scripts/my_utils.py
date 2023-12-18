@@ -197,7 +197,7 @@ def combine_arrays_w_percentage(array1, array2, percentage):
 
 #%% Split data
 
-def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, random_state=None, show_distribution=False, equal_PtID=True, seperate_target=True):
+def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, random_state=None, show_distribution=False, equal_PtID=True, seperate_target=True, group_column = 'Race'):
     """
     Description
     ----------
@@ -281,14 +281,14 @@ def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, rand
     test.reset_index(inplace=True, drop=True)
     
     # test if the distribution is correct and plot
-    train_distribution = train['Race'].value_counts(normalize=True)
-    test_distribution = test_2['Race'].value_counts(normalize=True)
+    train_distribution = train[group_column].value_counts(normalize=True)
+    test_distribution = test_2[group_column].value_counts(normalize=True)
     
 
     if show_distribution:
         # test if the distribution is correct and plot
-        train_distribution = train['Race'].value_counts(normalize=True)
-        test_distribution = test['Race'].value_counts(normalize=True)       
+        train_distribution = train[group_column].value_counts(normalize=True)
+        test_distribution = test[group_column].value_counts(normalize=True)       
         
         # plot distribution
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
@@ -344,15 +344,15 @@ def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, rand
         plt.show()
         # return train, test, train_distribution, test_distribution
     if seperate_target:
-        x_train = train.drop(['Target', 'PtID', 'Race'], axis=1)
+        x_train = train.drop(['Target', 'PtID', group_column], axis=1)
         y_train = train['Target']
-        x_test = test.drop(['Target', 'PtID', 'Race'], axis=1)
+        x_test = test.drop(['Target', 'PtID', group_column], axis=1)
         y_test = test['Target']
     
         return  x_train, y_train, x_test, y_test
     return train, test
 
-def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_target = True):
+def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_target = True, group_column = "Race"):
     """
     Remove bottom values for each PtID
 
@@ -391,9 +391,9 @@ def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_
         x_train = pd.concat([x_train, first_values])
     
     if seperate_target:
-        x_train2 = x_train.drop(['Target', 'PtID', 'Race'], axis=1)
+        x_train2 = x_train.drop(['Target', 'PtID', group_column], axis=1)
         y_train = x_train['Target']
-        x_test = x_val.drop(['Target', 'PtID', 'Race'], axis=1)
+        x_test = x_val.drop(['Target', 'PtID', group_column], axis=1)
         y_test = x_val['Target']
     
         return  x_train2, y_train, x_test, y_test
@@ -401,7 +401,7 @@ def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_
     
     return  x_train, x_val
 
-def seperate_the_target(x_train, x_val=None):
+def seperate_the_target(x_train, x_val=None, group_column = "Race"):
     """
     Split training/validatio and label variable
 
@@ -430,12 +430,12 @@ def seperate_the_target(x_train, x_val=None):
             DESCRIPTION.
     """
   # Process training data
-    x_train2 = x_train.drop(['Target', 'PtID', 'Race'], axis=1)
+    x_train2 = x_train.drop(['Target', 'PtID', group_column], axis=1)
     y_train = x_train['Target']
 
     # Check if validation data is provided
     if x_val is not None:
-        x_test = x_val.drop(['Target', 'PtID', 'Race'], axis=1)
+        x_test = x_val.drop(['Target', 'PtID', group_column], axis=1)
         y_test = x_val['Target']
         return x_train2, y_train, x_test, y_test
     else:
@@ -512,8 +512,11 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
         raise ValueError("Input not understood. Please provide one of the following options: " + ", ".join(valid_inputs))
         
 
-def split_time_series_data(df, test_size, seperate_target=True):
+def split_time_series_data(df, test_size, seperate_target=True, group_column ="Race"):
     """
+    df: dataframe
+    test_size: decimal % you want your test_size to be
+    seperate_target: should target be split?
     Splits a DataFrame into training and validation sets without shuffling, preserving time order.
     
     :param df: Pandas DataFrame containing the time series data.
@@ -521,7 +524,6 @@ def split_time_series_data(df, test_size, seperate_target=True):
     :return: four datasets if seperate_target is default(True), the training set and the validation set and thei targets
     """
 
-    # Assuming df is your DataFrame
     train_size = 1-test_size
     total_rows = len(df)
     split_index = int(total_rows * train_size)  # 85% for training
@@ -532,7 +534,7 @@ def split_time_series_data(df, test_size, seperate_target=True):
     
     
     if seperate_target:
-        x_train, y_train, x_test, y_test= seperate_the_target(train_df,validation_df)
+        x_train, y_train, x_test, y_test= seperate_the_target(train_df,validation_df, group_column = group_column)
     
         return  x_train, y_train, x_test, y_test
     
@@ -580,7 +582,7 @@ def get_rnn_input (x_data):
     x_train_reshape = x_data.values.reshape(-1, x_data.shape[1], 1)
     return x_train_reshape
 
-def create_cnn(my_input_shape):
+def create_cnn1(my_input_shape):
     from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Dropout, BatchNormalization
     from tensorflow.keras.models import Sequential
     from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense
@@ -588,7 +590,7 @@ def create_cnn(my_input_shape):
     from tensorflow import keras
     
     model = tf.keras.Sequential([
-        Conv1D(32, 3, activation='relu', input_shape=my_input_shape),
+        Conv1D(32, 3, activation='relu', input_shape=(my_input_shape,1)),
         BatchNormalization(),
         MaxPooling1D(),
         Flatten(),
@@ -598,6 +600,61 @@ def create_cnn(my_input_shape):
     
     return model
 
+
+
+
+
+def create_basic_rnn_vanDoorn(input_length):
+    from tensorflow.keras.models import Model
+    from tensorflow.keras.layers import Input, SimpleRNN, Bidirectional, Dense, Dropout
+    from tensorflow.keras.optimizers import Adam
+
+    # input layer
+    input_layer = Input(batch_shape=(None, input_length, 1))
+
+    # first layer with 32 neurons
+    layer1 = Bidirectional(SimpleRNN(32, activation='relu'), input_shape=(input_length, 1))(input_layer)
+
+    layer2 = Dense(16)(layer1)
+
+    # Dropout
+    layer3 = Dropout(0.1)(layer2)
+
+    # pred horizons
+    output_layer = Dense(1, name='output')(layer3)
+    
+    model = Model(inputs=input_layer, outputs=output_layer)
+    
+    # Compile the model
+
+    return model
+
+def create_lstm_vanDoorn(input_length):
+    from tensorflow.keras.models import Model
+    from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
+
+    # input layer
+    input_layer = Input(shape=(input_length, 1))
+
+    # first LSTM layer with 32 neurons and returning sequences
+    lstm_layer1 = LSTM(32, return_sequences=True)(input_layer)
+
+    # second LSTM layer with 16 neurons
+    lstm_layer2 = LSTM(16)(lstm_layer1)
+
+    # Dropout
+    dropout_layer = Dropout(0.05)(lstm_layer2)
+
+    # output layer
+    output_layer = Dense(1, name='output')(dropout_layer)
+    
+    # creating the model
+    model = Model(inputs=input_layer, outputs=output_layer)
+    
+    # Compile the model
+    model.compile(optimizer='adam', loss='mean_squared_error')
+
+    return model
 
 
 def create_rnn(my_input_shape):
@@ -618,3 +675,138 @@ def create_rnn(my_input_shape):
     
     model.compile(optimizer='adam', loss='mean_squared_error')
     return model
+
+
+
+#%% result calculations
+
+def calculate_rmse(actual, predicted):
+    """
+    Calculate the Mean Squared Error between two numpy arrays.
+
+    Parameters:
+    actual (numpy.array): The array of actual values.
+    predicted (numpy.array): The array of predicted values.
+
+    Returns:
+    float: The Mean Squared Error between array1 and array2.
+    """
+    import numpy as np
+    # Ensuring both arrays are of the same length
+    if len(actual) != len(predicted):
+        raise ValueError("RMSE: Arrays must be of the same length")
+
+    # Calculating the MSE
+    mse = np.mean((actual - predicted) ** 2)
+    rmse = np.sqrt(mse)
+    return rmse
+
+def calculate_mse(actual, predicted):
+    """
+    Calculate the Mean Squared Error between two numpy arrays.
+
+    Parameters:
+    actual (numpy.array): The array of actual values.
+    predicted (numpy.array): The array of predicted values.
+
+    Returns:
+    float: The Mean Squared Error between array1 and array2.
+    """
+    import numpy as np
+    # Ensuring both arrays are of the same length
+    if len(actual) != len(predicted):
+        raise ValueError("RMSE: Arrays must be of the same length")
+
+    # Calculating the MSE
+    mse = np.mean((actual - predicted) ** 2)
+
+    return mse
+
+
+def calculate_mae(predicted, actual):
+    """
+    Calculate the Mean Absolute Error between two numpy arrays.
+
+    Parameters:
+    actual (numpy.array): The array of actual values.
+    predicted (numpy.array): The array of predicted values.
+
+    Returns:
+    float: The Mean Absolute Error between array1 and array2.
+    """
+    import numpy as np
+    # Ensuring both arrays are of the same length
+    if len(predicted) != len(actual):
+        raise ValueError("mae: Arrays must be of the same length")
+
+    # Calculating the MAE
+    mae = np.mean(np.abs(predicted - actual))
+    return mae
+
+def calculate_mard(predicted, actual):
+    """
+    Calculate the Absolute Relative Difference between two numpy arrays.
+
+    Parameters:
+    actual (numpy.array): The array of actual values.
+    predicted (numpy.array): The array of predicted values.
+
+    Returns:
+    numpy.array: An array of the Absolute Relative Differences for each element.
+    """
+    import numpy as np
+    # Ensuring both arrays are of the same length
+    if len(predicted) != len(actual):
+        raise ValueError("mard: Arrays must be of the same length")
+        # Flatten 'actual' if it's not already 1-dimensional
+    if actual.ndim > 1:
+        actual = actual.flatten()
+    # Avoid division by zero
+    with np.errstate(divide='ignore', invalid='ignore'):
+        ard = np.abs((predicted - actual) / actual)
+        # print("Shape of 'ard':", ard.shape)
+        # print("Shape of 'actual':", actual.shape)
+        ard[actual == 0] = 0  # Set ARD to 0 where the first array is 0
+        mard = np.mean(ard)
+
+    return mard
+
+
+def calculate_r_squared(actual, predicted):
+    """
+    Calculate the coefficient of determination (R^2) for actual and predicted values.
+
+    Parameters:
+    actual (numpy.array): The array of actual values.
+    predicted (numpy.array): The array of predicted values.
+
+    Returns:
+    float: The R^2 value.
+    """
+    import numpy as np
+
+    # Ensure both arrays have the same length
+    if len(actual) != len(predicted):
+        raise ValueError("R2: Both arrays must be of the same length")
+
+
+    # Sum of Squares of Residuals (SSR)
+    ssr = np.sum((actual - predicted) ** 2)
+    
+    # Total Sum of Squares (SST)
+    mean_actual = np.mean(actual)
+    sst = np.sum((actual - mean_actual) ** 2)
+
+
+    # Coefficient of Determination (R^2)
+    r_squared = 1 - (ssr / sst)
+
+    return r_squared
+
+
+def calculate_results (actual,predicted):
+    rmse = calculate_rmse(actual, predicted)
+    # mae = calculate_mae(predicted, actual)
+    # mard = calculate_mard(predicted, actual)
+    # r2 = calculate_r_squared(actual, predicted)
+    return rmse

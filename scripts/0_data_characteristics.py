@@ -22,7 +22,7 @@ df_roster.drop(columns=['RecID','SiteID'], inplace = True)
 df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic Black', 'black')
 df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic White', 'white')
 df_roster.rename(columns={'RaceProtF':"Race"}, inplace=True)
-
+df_roster= df_roster[df_roster['FPtStatus'] != 'Dropped']
 # baseline and first visit
 df_baseline = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FBaseline.txt', sep='|')
 df_baseline.drop(columns=['RecID','SiteID','EligChecklist','DomHand', 'EduLevel','EduLevelUnk','AnnualInc',
@@ -36,7 +36,14 @@ df_cgm['CGM'] = df_cgm['Glucose']/18
 df_cgm.drop(columns=['RecID','SiteID','FileUniqueRecID','Glucose'], inplace = True)
 df_cgm = df_cgm.sort_values(by=['PtID', 'DeviceDaysFromEnroll', 'DeviceTm'])
 
+df_unique = df_roster['PtID'].unique()
 
+
+df = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data//1_2_cnn_ws60min_ph60min.csv')
+df.dropna(inplace=True)
+
+df2 = df[df['PtID'].isin(df_unique)]
+df3 = df2[df2['Race'] != 'black']
 #%% load data
 # adverse reaction to CGM
 df_advEvent = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FAdvEvent.txt', sep='|')
@@ -237,3 +244,32 @@ plt.show()
 
 
 df_results.Weeks.mean()
+
+#%%
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(20, 6), dpi=300)  # 10x6 inches figure with 300 DPI
+
+# Creating the histogram
+plt.hist(df_baseline['DiagT1DAge'], bins=100, edgecolor='black')  # 'bins' defines the number of intervals or "buckets"
+
+# Adding title and labels
+plt.title('diagt1d Data Distribution')
+plt.xlabel('diagt1d')
+plt.ylabel('Frequency')
+
+# Customizing x-axis ticks
+# min_value = min(df_cgm['CGM'])
+# max_value = max(df_cgm['CGM'])
+# tick_interval = 1.0  # Adjust as needed for appropriate granularity
+# ticks = np.arange(min_value, max_value + tick_interval, tick_interval)
+# plt.xticks(ticks)
+
+
+# Displaying the plot
+plt.show()
+
+
+
+# df_results.Weeks.mean()
