@@ -2,5 +2,7 @@
 scripts/retired_scripts/
 scripts/slet.py
 /results
-scripts/*job_script*
+scripts/*job_script/
+scripts/*job_script*.sh
+scripts/*job_script*.out
 /data_replace_bg
