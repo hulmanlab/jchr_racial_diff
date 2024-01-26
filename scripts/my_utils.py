@@ -47,7 +47,7 @@ def days_time_to_datetime(df, col_days_from_enroll, col_time,):
 
 
 #%% feature extraction
-def feature_extraction(df, window_size, prediction_horizon, col_patient_id ='PtID', col_glucose='CGM'):
+def feature_extraction_dl(df, window_size, prediction_horizon, col_patient_id ='PtID', col_glucose='CGM'):
 
     """
     Extracts features from a DataFrame containing glucose data for multiple patients.

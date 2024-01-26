@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov 20 16:19:13 2023
+Created on Sun Dec 24 11:09:25 2023
 
 @author: au605715
 """
 
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 20 16:19:13 2023
+
+@author: au605715
+"""
+#%%
 import pandas as pd
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
@@ -13,6 +21,7 @@ import my_utils
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import pickle
 from sklearn.model_selection import GroupShuffleSplit
+import datetime
 from tensorflow import keras
 
 def split_data_black_white_ratio_in_loop (df_group1, df_group2, ratio):
@@ -50,7 +59,7 @@ def split_data_black_white_ratio_in_loop (df_group1, df_group2, ratio):
         x_train_temp1 = df_group1.iloc[train_idx]
         x_val_temp1 = df_group1.iloc[val_test_idx]
     
-        x_train, y_train, x_val, y_val = my_utils.seperate_the_target(x_train_temp1, x_val_temp1, group_column ="Gender")
+        x_train, y_train, x_val, y_val = my_utils.seperate_the_target(x_train_temp1, x_val_temp1)
     
     elif percentage == 0: # if there are no patients in group 1
      
@@ -60,31 +69,27 @@ def split_data_black_white_ratio_in_loop (df_group1, df_group2, ratio):
         x_train_temp2 = df_group2.iloc[train_idx]
         x_val_temp2 = df_group2.iloc[test_idx]
     
-        x_train, y_train, x_val, y_val = my_utils.seperate_the_target(x_train_temp2, x_val_temp2, group_column ="Gender")
+        x_train, y_train, x_val, y_val = my_utils.seperate_the_target(x_train_temp2, x_val_temp2)
         
     else: # if there are patients in group 2
-        x_train, y_train, x_val, y_val = my_utils.get_groupShuflesplit_equal_groups(df_group1, df_group2,test_size=0.2, seperate_target=True, group_column ="Gender")     # split based on PtID
+        x_train, y_train, x_val, y_val = my_utils.get_groupShuflesplit_equal_groups(df_group1, df_group2,test_size=0.2, seperate_target=True)     # split based on PtID
     
     return x_train, y_train, x_val, y_val
-    
-#%%                     load data
-# df = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/1_2_2_cnn_gender_ws60min_ph60min.csv')
 
 
-file_path_df = r'/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_2_cnn_gender_ws60min_ph60min.csv'
+#                    load data
+file_path_df = r'/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_1_model_input_ws60min_ph60min.csv'
 df = pd.read_csv(file_path_df)
 
 df.dropna(inplace=True)
 
 # Specify the file path
-# file_path = "/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/1_3_2_data_split_mf_v3.pkl"
+file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_1_data_split_wb_mf_v3.pkl"
 
-file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_2_data_split_mf_v3.pkl"
 # Read from file
 with open(file_path, 'rb') as file:
     dictionary = pickle.load(file)
     
-
 #%%                     extract data from dictionary
 
 testing_mode = False
@@ -92,24 +97,22 @@ dict_results = {}
 
 i = 0
 
-
 for (PtID, percentage), value in dictionary.items():
     print(i)
     i=i+1
     
 #                     get data from dictionary
 
-    ptid_training_m = value['training_m']
-    ptid_training_f = value['training_f']
+    ptid_training_w = value['training_w']
+    ptid_training_b = value['training_b']
     ptid_test = value['PtID_test']
-    ptid_gender = value['gender']
+    ptid_race = value['race']
 
-    df_train_m = df[df['PtID'].isin(ptid_training_m)]
-    df_train_f = df[df['PtID'].isin(ptid_training_f)]
-
+    df_train_w = df[df['PtID'].isin(ptid_training_w)]
+    df_train_b = df[df['PtID'].isin(ptid_training_b)]
     df_test = df[df['PtID']==ptid_test]
     
-    print('goat 1')
+
 
 #%%                     split dataset80/20 
     
@@ -118,29 +121,28 @@ for (PtID, percentage), value in dictionary.items():
 
 #%%                     split dataset using one week of data to validate on the rest
 
-    df_train_mf = pd.concat([df_train_m, df_train_f], ignore_index=True)
-    df_train_mf.reset_index
-    
+    df_train_wb = pd.concat([df_train_w, df_train_b], ignore_index=True)
+    df_train_wb.reset_index
+
     # split within patients, train/val
-    x_train, y_train, x_val, y_val = my_utils.split_within_PtID(df_train_mf, numb_values_to_remove=-672, seperate_target=True, group_column="Gender") # split witin  PtID: 4values/hour * 24hour/day*7days/week = 672 values/week
-    
-    
-    
-    print('test1')
+    x_train, y_train, x_val, y_val = my_utils.split_within_PtID(df_train_wb, numb_values_to_remove=-672, seperate_target=True, group_column="Race") # split witin  PtID: 4values/hour * 24hour/day*7days/week = 672 values/week
+
+    print('ged 1')
     #%%                     Fine- tuning: split data
 
     # split within patients, train/test
-    xy_train_tl, xy_test_tl = my_utils.split_within_PtID(df_test, numb_values_to_remove=-672, seperate_target=False, group_column="Gender") # split witin  PtID: 4values/hour * 24hour/day*7days/week = 672 values/week
-    
-    # split train in train/val with seperate targets
-    x_train_tl, y_train_tl, x_val_tl, y_val_tl = my_utils.split_time_series_data(xy_train_tl, test_size=0.15, group_column="Gender")
+    xy_train_tl, xy_test_tl = my_utils.split_within_PtID(df_test, numb_values_to_remove=-672, seperate_target=False, group_column="Race") # split witin  PtID: 4values/hour * 24hour/day*7days/week = 672 values/week
 
+    baseline_test_tl = xy_test_tl['Value_4']
+
+    # split train in train/val with seperate targets
+    x_train_tl, y_train_tl, x_val_tl, y_val_tl = my_utils.split_time_series_data(xy_train_tl, test_size=0.15)
+    print('ged 2')
     
     # seperate target from test
-    x_test_tl, y_test_tl = my_utils.seperate_the_target(xy_test_tl, group_column="Gender")
+    x_test_tl, y_test_tl = my_utils.seperate_the_target(xy_test_tl, group_column="Race")
+    print('ged 3')
 
-    
-    print('goat_2: scale data')
 #%%                     Scale data
     # min max normalization [0,1]
     scaler_x = MinMaxScaler()
@@ -149,7 +151,6 @@ for (PtID, percentage), value in dictionary.items():
     x_train_scal = scaler_x.transform(x_train)
     x_val_scal = scaler_x.transform(x_val)
     
-    
 
     # finetuning: min max normalization
     scaler_tl_x = MinMaxScaler()
@@ -157,7 +158,6 @@ for (PtID, percentage), value in dictionary.items():
     
     x_train_tl_scal = scaler_tl_x.transform(x_train_tl)
     x_val_tl_scal = scaler_tl_x.transform(x_val_tl)
-    
     x_test_tl_scal = scaler_tl_x.transform(x_test_tl)
 
 #%%                 Scale y data
@@ -165,14 +165,13 @@ for (PtID, percentage), value in dictionary.items():
 
     # Reshape and then fit
     y_train_reshaped = y_train.values.reshape(-1, 1)
+    
     scaler_y.fit(y_train_reshaped)
     
     # Transform the datasets
     y_train = scaler_y.transform(y_train_reshaped)
     y_val = scaler_y.transform(y_val.values.reshape(-1, 1))   
 
-
-# 
     
     scaler_tl_y = MinMaxScaler()
     # Reshape and fit the scaler on the training data
@@ -185,33 +184,21 @@ for (PtID, percentage), value in dictionary.items():
     y_test_tl = scaler_tl_y.transform(y_test_tl.values.reshape(-1, 1))
     
 
- #%%                     Transform input to the rnn
+#%%                     Transform input to the rnn
     x_train = pd.DataFrame(x_train_scal)
     x_val = pd.DataFrame(x_val_scal)
-
-    
-    # x_train = pd.DataFrame(x_train)
-    # x_val = pd.DataFrame(x_val)
-    # x_test = pd.DataFrame(x_test)
     
     x_train = my_utils.get_rnn_input(x_train)
     x_val = my_utils.get_rnn_input(x_val)
-
     
     
     # input to cnn_tl
     x_train_tl = pd.DataFrame(x_train_tl_scal)
     x_val_tl = pd.DataFrame(x_val_tl_scal)
     x_test_tl = pd.DataFrame(x_test_tl_scal)
-    
-    # x_train_tl = pd.DataFrame(x_train_tl)
-    # x_val_tl = pd.DataFrame(x_val_tl)
-    # x_test_tl_w = pd.DataFrame(x_test_tl)
-    
-    x_train_tl = my_utils.get_rnn_input(x_train_tl)
 
+    x_train_tl = my_utils.get_rnn_input(x_train_tl)
     x_val_tl = my_utils.get_rnn_input(x_val_tl)
-    
     x_test_tl = my_utils.get_rnn_input(x_test_tl)
 
 
@@ -220,7 +207,18 @@ for (PtID, percentage), value in dictionary.items():
     model_base = my_utils.create_lstm_vanDoorn((x_train.shape[1]))
     
     # Compile the model
-    optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=0.01, decay = 0.001)
+    initial_learning_rate = 0.001
+    decay_steps = 1000
+    decay_rate = 0.005
+
+    lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+    initial_learning_rate = initial_learning_rate,
+    decay_steps=decay_steps,
+    decay_rate=decay_rate,
+    staircase=True  # Apply the decay in a discrete staircase function
+    )
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+    # optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=0.01, decay = 0.001)
 
     model_base.compile(optimizer=optimizer,
                   loss='mean_squared_error', 
@@ -230,33 +228,20 @@ for (PtID, percentage), value in dictionary.items():
     # Define early stopping callbacks
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     
-    history = model_base.fit(x_train, y_train, epochs=1, batch_size=64, validation_data=(x_val, y_val), callbacks=[early_stop])
+    history = model_base.fit(x_train, y_train, epochs=20, batch_size=1024, validation_data=(x_val, y_val), callbacks=[early_stop])
 
-    y_pred_test = model_base.predict(x_test_tl)   
-
-    # baseline_test = df_test['Value_4']
-   
-    # baseline_test.reset_index(drop=True, inplace=True)
-
-    
-    import matplotlib.pyplot as plt
-
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('Model loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend(['Train', 'Validation'], loc='upper right')
-    plt.grid(True)
-    plt.show()
+    y_pred_test = model_base.predict(x_test_tl)
 
     
 #%%                        Fine-tune the model   
-    print('goat: finetuning now')
-    tl_learning_rate = 0.0001
-    
-    baseline_test_tl = xy_test_tl['Value_12']
-    baseline_test_tl.reset_index(drop=True, inplace=True)
+    lr_schedule_tl = tf.keras.optimizers.schedules.InverseTimeDecay(
+    initial_learning_rate = 0.0001,
+    decay_steps=decay_steps,
+    decay_rate=decay_rate,
+    staircase=True  # Apply the decay in a discrete staircase function
+    )
+    # tl_learning_rate = 0.0001
+   
 
     model_tl = model_base
     for layer in model_tl.layers[:-2]:  # This freezes all layers except the last two dense layers
@@ -265,24 +250,20 @@ for (PtID, percentage), value in dictionary.items():
     # The last two dense layers are left unfrozen for fine-tuning
     
     # Recompile the model with a smaller learning rate
-    model_tl.compile(optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=tl_learning_rate),  # Use a smaller learning rate for fine-tuning
+    model_tl.compile(optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=lr_schedule_tl),  # Use a smaller learning rate for fine-tuning
                   loss='mean_squared_error', 
                   metrics=['mean_squared_error', 'mean_absolute_error'])
     
 
     early_stop_tl = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     
-    history_tl = model_tl.fit(x_train_tl, y_train_tl, epochs=1, batch_size=64, validation_data=(x_val_tl, y_val_tl), callbacks=[early_stop_tl])
-
-
+    history_tl = model_tl.fit(x_train_tl, y_train_tl, epochs=20, batch_size=64, validation_data=(x_val_tl, y_val_tl), callbacks=[early_stop_tl])
 
     y_pred_test_tl = model_tl.predict(x_test_tl)
 
 
 
 #%% Scale y_label back
-
-    #scale target back
 
     y_test_tl = scaler_tl_y.inverse_transform(y_test_tl)
     
@@ -292,22 +273,19 @@ for (PtID, percentage), value in dictionary.items():
     y_pred_test_tl = scaler_tl_y.inverse_transform(y_pred_test_tl)
     
     #%% My actual/true values and my baseline value
-    y_actual = y_test_tl
-    y_last_val = baseline_test_tl.to_numpy()
+    
+    y_actual_tl = y_test_tl
+    y_last_val_tl = baseline_test_tl.to_numpy()
     
 
-    #%%
-
-
     dict_results[(PtID, percentage)] = {
-        "gender": ptid_gender,
-        # "y_last_val": baseline_test.to_numpy(),
+        'timestamp': datetime.datetime.now(),
+        "race": ptid_race,
         "y_actual": y_test_tl,
-        "y_last_val": baseline_test_tl.to_numpy(),        
+        "y_last_val": baseline_test_tl.to_numpy(),
+              
         "y_pred": y_pred_test,
-
         "y_pred_tl": y_pred_test_tl,
-        
         
         'epochs': len(history.history['loss']),
         'epochs_tl': len(history_tl.history['loss']),
@@ -324,9 +302,8 @@ for (PtID, percentage), value in dictionary.items():
         'train_mse_tl': history_tl.history['mean_squared_error'],
         'val_mse_tl': history_tl.history['val_mean_squared_error'],
         'train_mae_tl': history_tl.history['mean_absolute_error'],
-        'val_mae_tl': history_tl.history['val_mean_absolute_error']
-
-
+        'val_mae_tl': history_tl.history['val_mean_absolute_error'],
+        
         }
     
     
@@ -335,10 +312,8 @@ for (PtID, percentage), value in dictionary.items():
     #%%
     
     if testing_mode == False:
-        # file_path = rf"/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/delete_predicted_gender_results//patient{PtID}_ratio{percentage}.pkl"
-        file_path = f"/home/hbt/jchr_data/jchr_racial_diff/results/processed_data/2_1_2_predicted_results_rnn_mf/patient{PtID}_ratio{percentage}.pkl"
-
-
+        file_path = f"/home/hbt/jchr_data/jchr_racial_diff/results/processed_data/2_1_1_predicted_results_rnn_wb_mf_v5/patient{PtID}_ratio{percentage}.pkl"
+        # file_path = f"/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/delete_predicted_race_results/patient{PtID}_ratio{percentage}.pkl"
 
         with open(file_path, 'wb') as file:
             # Serialize and save the list to the file
@@ -363,4 +338,3 @@ for (PtID, percentage), value in dictionary.items():
 # # df.rename(columns={'percentage': "ratio_w"}, inplace=True)
     
     
-
