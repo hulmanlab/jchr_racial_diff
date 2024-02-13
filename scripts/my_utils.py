@@ -197,7 +197,7 @@ def combine_arrays_w_percentage(array1, array2, percentage):
 
 #%% Split data
 
-def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, random_state=None, show_distribution=False, equal_PtID=True, seperate_target=True, group_column = 'race'):
+def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, random_state=None, show_distribution=False, equal_PtID=True, seperate_target=True, group_column = 'group_number'):
     """
     Description
     ----------
@@ -293,16 +293,16 @@ def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, rand
         # plot distribution
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
         # Add title for the entire plot
-        fig.suptitle('Race Distribution')
+        fig.suptitle('group Distribution')
         # for the titel of the subplots
         test_size = test_size*100
         train_size = 100-test_size
         
-        # Plot training set race distribution
+        # Plot training set group distribution
         bars_train = axs[0].bar(train_distribution.index, train_distribution, color=['blue', 'orange'])
         axs[0].set_title(f'{train_size}% Training & Finetuning Set') # subtitel
 
-        # Plot testing set race distribution
+        # Plot testing set group distribution
         bars_test = axs[1].bar(test_distribution.index, test_distribution, color=['blue', 'orange'])
         
         axs[1].set_title(f'{test_size}% Testing Set') # subtitel
@@ -352,7 +352,7 @@ def get_groupShuflesplit_equal_groups(df_group1, df_group2, test_size=0.10, rand
         return  x_train, y_train, x_test, y_test
     return train, test
 
-def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_target = True, group_column = "race"):
+def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_target = True, group_column = "group_number"):
     """
     Remove bottom values for each PtID
 
@@ -400,8 +400,64 @@ def split_within_PtID(df, numb_values_to_remove ,PtID_column = "PtID", seperate_
     
     
     return  x_train, x_val
+def split_within_PtID_ratio(df, percentage_to_remove, PtID_column="PtID", seperate_target=True, group_column="group_number"):
+    """
+    Split data into training and validation sets based on percentage for each PtID.
 
-def seperate_the_target(x_train, x_val=None, group_column = "race"):
+    Parameters
+    ----------
+    df : DataFrame
+    percentage_to_remove : float
+        DESCRIPTION. Percentage of rows to be used as validation set.
+    PtID_column : str, optional
+        DESCRIPTION. The default is "PtID".
+    seperate_target : bool, optional
+        DESCRIPTION. Whether to separate the target variable.
+
+    Returns
+    -------
+    If seperate_target is True:
+        x_train : DataFrame
+            DESCRIPTION: Training features.
+        y_train : Series
+            DESCRIPTION: Training target.
+        x_val : DataFrame
+            DESCRIPTION: Validation features.
+        y_val : Series
+            DESCRIPTION: Validation target.
+    Else:
+        x_train : DataFrame
+            DESCRIPTION: Training set without removed rows.
+        x_val : DataFrame
+            DESCRIPTION: Validation set with the rows that were removed.
+    """
+    import pandas as pd
+
+    # Group the data by PtID
+    grouped = df.groupby(PtID_column)
+
+    x_val = pd.DataFrame()
+    x_train = pd.DataFrame()
+
+    for pt_id, group in grouped:
+        # Calculate the number of values to remove based on the percentage
+        n_values_to_remove = int(len(group) * percentage_to_remove)
+        last_values = group.iloc[-n_values_to_remove:]
+        first_values = group.iloc[:-n_values_to_remove]
+        x_val = pd.concat([x_val, last_values])
+        x_train = pd.concat([x_train, first_values])
+
+    if seperate_target:
+        x_train2 = x_train.drop(['Target', PtID_column, group_column], axis=1)
+        y_train = x_train['Target']
+        x_val2 = x_val.drop(['Target', PtID_column, group_column], axis=1)
+        y_val = x_val['Target']
+
+        return x_train2, y_train, x_val2, y_val
+
+    return x_train, x_val
+
+def seperate_the_target(x_train, x_val=None, group_column = "group_number"):
     """
     Split training/validatio and label variable
 
@@ -441,18 +497,18 @@ def seperate_the_target(x_train, x_val=None, group_column = "race"):
     else:
         return x_train2, y_train
 
-def change_trainingset(train, race, test_size, random_state=None, equal_PtID = True, show_distribution=False):
+def change_trainingset(train, group_number, test_size, random_state=None, equal_PtID = True, show_distribution=False):
     """
     Description
     -----------
     split input in train and validation
-    depending on race-based-input, different parts of input comes out
+    depending on group-based-input, different parts of input comes out
 
     Parameters
     ----------
     train : DataFrame
         DESCRIPTION.
-    race : Boolean
+    group_number : Boolean
         valid_inputs = ["w", "b", "wb"]
     test_size : Float
         can also be validation_size, the rest automatically turns into training
@@ -467,7 +523,7 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
     Raises
     ------
     ValueError
-        Input not understood, see 'race' under 'parameters'
+        Input not understood, see 'group_number' under 'parameters'
 
     Returns
     -------
@@ -479,8 +535,8 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
     """
     from sklearn.model_selection import GroupShuffleSplit
     valid_inputs = ["w", "b", "wb"]
-    if race == "w":                                                             # split white people dataset for training
-        train_w = train[train['Race'] == 'white'].drop(labels = 'Race', axis = 1)
+    if group_number == "w":                                                             # split white people dataset for training
+        train_w = train[train['group_number'] == 'white'].drop(labels = 'group_number', axis = 1)
 
         gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
         train_idx, test_idx = next(gss.split(train_w, groups=train_w['PtID']))
@@ -491,8 +547,8 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
         
         return x_train_w, y_train_w, x_val_w, y_val_w
     
-    elif race == "b":                                                            # split black people dataset for training
-        train_b = train[train['Race'] == 'black'].drop(labels = 'Race', axis = 1)
+    elif group_number == "b":                                                            # split black people dataset for training
+        train_b = train[train['group_number'] == 'black'].drop(labels = 'group_number', axis = 1)
         gss = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=random_state)
         train_idx, test_idx = next(gss.split(train_b, groups=train_b['PtID']))
 
@@ -502,9 +558,9 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
         
         return x_train_b, y_train_b, x_val_b, y_val_b
     
-    elif race == "wb":
-        train_b = train[train['Race'] == 'black']
-        train_w = train[train['Race'] == 'white']
+    elif group_number == "wb":
+        train_b = train[train['group_number'] == 'black']
+        train_w = train[train['group_number'] == 'white']
 
         x_train_wb,y_train_wb, x_val_wb, y_val_wb  = get_groupShuflesplit_equal_groups(train_w, train_b, test_size=test_size, random_state=random_state, show_distribution=show_distribution, equal_PtID=equal_PtID)
         return x_train_wb,y_train_wb, x_val_wb, y_val_wb
@@ -512,7 +568,7 @@ def change_trainingset(train, race, test_size, random_state=None, equal_PtID = T
         raise ValueError("Input not understood. Please provide one of the following options: " + ", ".join(valid_inputs))
         
 
-def split_time_series_data(df, test_size, seperate_target=True, group_column ="Race"):
+def split_time_series_data(df, test_size, seperate_target=True, group_column ="group_number"):
     """
     df: dataframe
     test_size: decimal % you want your test_size to be

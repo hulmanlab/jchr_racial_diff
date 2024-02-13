@@ -78,13 +78,13 @@ def split_data_black_white_ratio_in_loop (df_group1, df_group2, ratio):
 
 
 #                    load data
-file_path_df = r'/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_1_model_input_ws60min_ph60min.csv'
+file_path_df = r'/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_model_input_ws60min_ph60min.csv'
 df = pd.read_csv(file_path_df)
 
 df.dropna(inplace=True)
 
 # Specify the file path
-file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_1_data_split_wb_mf_v3.pkl"
+file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_data_split_race.pkl"
 
 # Read from file
 with open(file_path, 'rb') as file:
@@ -103,10 +103,10 @@ for (PtID, percentage), value in dictionary.items():
     
 #                     get data from dictionary
 
-    ptid_training_w = value['training_w']
-    ptid_training_b = value['training_b']
+    ptid_training_w = value['training_gr1']
+    ptid_training_b = value['training_gr2']
     ptid_test = value['PtID_test']
-    ptid_race = value['race']
+    ptid_group_nr = value['group_number']
 
     df_train_w = df[df['PtID'].isin(ptid_training_w)]
     df_train_b = df[df['PtID'].isin(ptid_training_b)]

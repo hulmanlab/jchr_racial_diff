@@ -32,9 +32,7 @@ df_baseline.drop(columns=['RecID','SiteID','EligChecklist','DomHand', 'EduLevel'
 
 # cgm
 df_cgm = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FDataCGM.txt',sep='|')
-df_cgm['CGM'] = df_cgm['Glucose']/18
-df_cgm.drop(columns=['RecID','SiteID','FileUniqueRecID','Glucose'], inplace = True)
-df_cgm = df_cgm.sort_values(by=['PtID', 'DeviceDaysFromEnroll', 'DeviceTm'])
+ 
 
 df_unique = df_roster['PtID'].unique()
 
