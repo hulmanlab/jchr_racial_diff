@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Mon Mar 11 00:15:47 2024
+
+@author: au605715
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Tue Nov 14 18:45:17 2023
 Run after 2_preprocess
 Gives a dictionary with patient IDs.
@@ -26,8 +34,8 @@ df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic Black', 'b
 df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic White', 'white')
 df_roster.rename(columns={'RaceProtF':"Race"}, inplace=True)
 
-df_baseline = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FBaseline.txt', sep='|')
 
+df_baseline = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FBaseline.txt', sep='|')
 df_baseline = df_baseline[df_baseline['PtID'].isin(df_roster['PtID'])]
 edu_mapping = {
     
@@ -54,14 +62,14 @@ edu_mapping = {
 # Use the mapping dictionary to replace values in the 'EduLevel' column
 df_baseline['EduLevel'] = df_baseline['EduLevel'].replace(edu_mapping)
 
+#%%
+df_roster2 = pd.read_csv(r'/Users/au605715/Documents/GitHub/study1/FPtRosterNew.txt', sep='|')
+df_roster2['ageAtEnroll'] = df_roster2['ageAtEnroll'].apply(lambda x: 2 if x > 17 else 1)
+
 
 #%%
 
-# group_column = "Race"
-# id_column = "PtID"
-# group1 = "white"
-# group2 = "black"
-# df = df_roster
+
 
 def split_ptid(df,group_column, group1, group2, id_column="PtID"):
     
@@ -70,11 +78,10 @@ def split_ptid(df,group_column, group1, group2, id_column="PtID"):
     # df_unique = df[id_column].unique()
     
     dictionary = {}
-    
     for current_ratio in ratio:
         df_unique = df[id_column].unique()
         print(current_ratio)
-        
+
         for PtID in df_unique:
             print(PtID)
             PtID_gr1 = df_unique_gr1.copy()
@@ -93,26 +100,32 @@ def split_ptid(df,group_column, group1, group2, id_column="PtID"):
             # removing a PtID from the smalles group when the PtID occurs in the biggest group
             # this is done to make sure there are equal amounts of PtIDs in training no matter which group the test person is from
             if PtID in larger_group:
+                print('removing a PtID from the smalles group when the PtID occurs in the biggest group')
                 random_index=np.random.randint(0, len(smaller_group))
                 smaller_group = np.delete(smaller_group, random_index)
                 
                 
             if len(PtID_gr1) > len(PtID_gr2):
+                print('gr1 is biggest')
                 PtID_gr1 = larger_group
                 PtID_gr2 = smaller_group
+      
             else:
+                print('gr2 is biggest')
                 PtID_gr2 = larger_group
                 PtID_gr1 = smaller_group
+                print(PtID_gr1)
+                print('goat')
     
             # Remove test PtID from ID
             if PtID in PtID_gr1: 
                 PtID_gr1 = PtID_gr1[PtID_gr1 != PtID]
-                group= "white"
+                group= "child"
             elif PtID in PtID_gr2:
                 PtID_gr2 = PtID_gr2[PtID_gr2 != PtID]
-                group = 'black'
+                group = 'adult'
             else:
-                raise ValueError(f"{PtID} is not found in either group")
+                raise ValueError(f"PtID: {PtID} is not found in either group")
             
                 
                 # Randomly remove PtID from the longer array to make them the same length
@@ -153,19 +166,26 @@ dictionary_gender = split_ptid(df=df_baseline, group_column="Gender", group1="M"
 
 df_baseline = df_baseline[df_baseline['EduLevelUnk'] != 1]
 dictionary_edulevel = split_ptid(df=df_baseline, group_column="EduLevel", group1="1", group2="2")
+
+dictionary_age = split_ptid(df=df_roster2, group_column="ageAtEnroll", group1=1, group2=2)
 # print(dictionary)
 
 
 #%%  Specify the file path
-# file_path_race = "/Users/au605715/Documents/GitHub/study1/1_3_data_split_race.pkl"
-# file_path_gender = "/Users/au605715/Documents/GitHub/study1/1_3_data_split_gender.pkl"
-# file_path_edulevel = "/Users/au605715/Documents/GitHub/study1/1_3_data_split_edulvl.pkl"
-# # Write to file
-# with open(file_path_race, 'wb') as file:
-#     pickle.dump(dictionary_race, file)
+file_path_race = "/Users/au605715/Documents/GitHub/study1/1_3_data_split_race_v6.pkl"
+file_path_gender = "/Users/au605715/Documents/GitHub/study1/1_3_data_split_gender_v6.pkl"
+file_path_edulevel = "/Users/au605715/Documents/GitHub/study1/1_3_data_split_edulvl_v6.pkl"
+file_path_age = "/Users/au605715/Documents/GitHub/study1/1_3_data_split_age_v6.pkl"
+# Write to file
+with open(file_path_race, 'wb') as file:
+    pickle.dump(dictionary_race, file)
     
-# with open(file_path_gender, 'wb') as file:
-#     pickle.dump(dictionary_gender, file)
+with open(file_path_gender, 'wb') as file:
+    pickle.dump(dictionary_gender, file)
     
-# with open(file_path_edulevel, 'wb') as file:
-#     pickle.dump(dictionary_edulevel, file)
+with open(file_path_edulevel, 'wb') as file:
+    pickle.dump(dictionary_edulevel, file)
+    
+    
+with open(file_path_age, 'wb') as file:
+    pickle.dump(dictionary_age, file)

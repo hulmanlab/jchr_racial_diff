@@ -6,3 +6,4 @@ scripts/*job_script/
 scripts/*job_script*.sh
 scripts/*job_script*.out
 /data_replace_bg
+/data_2

@@ -712,6 +712,21 @@ def create_lstm_vanDoorn(input_length):
 
     return model
 
+def create_lstm_vanDoorn_updated(input_length):
+    from tensorflow.keras.models import Model
+    from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
+
+    # input layer
+    input_layer = Input(shape=(input_length, 1))
+    lstm_layer1 = LSTM(8, return_sequences=True, activation='relu', kernel_initializer='glorot_uniform')(input_layer)
+    lstm_layer2 = LSTM(64, activation='relu', kernel_initializer='glorot_uniform')(lstm_layer1)
+    dropout_layer = Dropout(0.1)(lstm_layer2)
+    output_layer = Dense(1, name='output', kernel_initializer='glorot_uniform')(dropout_layer)
+    model = Model(inputs=input_layer, outputs=output_layer)
+    # model.compile(optimizer='adam', loss='mean_squared_error')
+
+    return model
+
 
 def create_rnn(my_input_shape):
     from tensorflow.keras.models import Sequential
