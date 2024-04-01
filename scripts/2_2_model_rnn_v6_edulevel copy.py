@@ -84,7 +84,7 @@ df = pd.read_csv(file_path_df)
 
 
 # Specify the file path
-file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_data_split_race_v6_2.pkl"
+file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_data_split_edulvl_v6.pkl"
 
 # Read from file
 with open(file_path, 'rb') as file:
@@ -92,9 +92,9 @@ with open(file_path, 'rb') as file:
     
 #%%                     extract data from dictionary
 
-testing_mode = False
-group_name = "Race" #  Gender, EduLevel
-df.drop(columns=['Gender','EduLevel','ageAtEnroll'], inplace = True)
+testing_mode = True
+group_name = "EduLevel" #  Gender, EduLevel
+df.drop(columns=['Gender','Race','ageAtEnroll'], inplace = True)
 df.dropna(inplace=True)
 
 
@@ -259,6 +259,7 @@ for (PtID, percentage), value in dictionary.items():
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     
     history = model_base.fit(x_train, y_train, epochs=100, batch_size=1024, validation_data=(x_val, y_val), callbacks=[early_stop])
+    model_base.summary()
 
     y_pred_test = model_base.predict(x_test_tl)
 
@@ -354,7 +355,7 @@ for (PtID, percentage), value in dictionary.items():
     #%%
     
 
-        file_path = f"/home/hbt/jchr_data/jchr_racial_diff/results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
+        file_path = f"/home/hbt/jchr_data/jchr_racial_diff/results/processed_data/2_1_1_predicted_results_rnn_v6_edulevel/patient{PtID}_ratio{percentage}.pkl"
         
         
         with open(file_path, 'wb') as file:

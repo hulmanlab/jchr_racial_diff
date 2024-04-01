@@ -84,7 +84,7 @@ df = pd.read_csv(file_path_df)
 
 
 # Specify the file path
-file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_data_split_race_v6.pkl"
+file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_data_split_race_v6_2.pkl"
 
 # Read from file
 with open(file_path, 'rb') as file:
@@ -354,7 +354,7 @@ for (PtID, percentage), value in dictionary.items():
     #%%
     
 
-        file_path = f"/home/hbt/jchr_data/jchr_racial_diff/results/processed_data/2_1_1_predicted_results_rnn_v6_race/patient{PtID}_ratio{percentage}.pkl"
+        file_path = f"/home/hbt/jchr_data/jchr_racial_diff/results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
         
         
         with open(file_path, 'wb') as file:
