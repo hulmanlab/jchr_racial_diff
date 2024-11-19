@@ -26,8 +26,7 @@ import numpy as np
 import pickle
 
 
-# df_roster = pd.read_csv(r'/home/hbt/jchr_data/jchr_racial_diff/data/FPtRoster.txt', sep='|')
-df_roster = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FPtRoster.txt', sep='|')
+df_roster = pd.read_csv(r'../data/FPtRoster.txt', sep='|')
 df_roster= df_roster[df_roster['FPtStatus'] != 'Dropped']
 df_roster.drop(columns=['RecID','SiteID','FPtStatus'], inplace = True)
 df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic Black', 'black')
@@ -35,7 +34,7 @@ df_roster['RaceProtF'] = df_roster['RaceProtF'].replace('Non-Hispanic White', 'w
 df_roster.rename(columns={'RaceProtF':"Race"}, inplace=True)
 
 
-df_baseline = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FBaseline.txt', sep='|')
+df_baseline = pd.read_csv(r'../data/FBaseline.txt', sep='|')
 df_baseline = df_baseline[df_baseline['PtID'].isin(df_roster['PtID'])]
 edu_mapping = {
     
@@ -63,7 +62,7 @@ edu_mapping = {
 df_baseline['EduLevel'] = df_baseline['EduLevel'].replace(edu_mapping)
 
 #%%
-df_roster2 = pd.read_csv(r'/Users/au605715/Documents/GitHub/study1/FPtRosterNew.txt', sep='|')
+df_roster2 = pd.read_csv(r'../data/FPtRosterNew.txt', sep='|')
 df_roster2['ageAtEnroll'] = df_roster2['ageAtEnroll'].apply(lambda x: 2 if x > 17 else 1)
 
 

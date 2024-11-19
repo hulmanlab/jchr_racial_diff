@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec 24 11:09:25 2023
-
-@author: au605715
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
 Created on Mon Nov 20 16:19:13 2023
 
 @author: au605715
@@ -78,13 +70,13 @@ def split_data_black_white_ratio_in_loop (df_group1, df_group2, ratio):
 
 
 #                    load data
-file_path_df = r'/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.csv'
+file_path_df = r'../results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.csv'
 df = pd.read_csv(file_path_df)
 
 
 
 # Specify the file path
-file_path = "/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_3_data_split_race_v6_2.pkl"
+file_path = "../results/preprocessed_data/1_3_data_split_race_v6_2.pkl"
 
 # Read from file
 with open(file_path, 'rb') as file:
@@ -354,7 +346,7 @@ for (PtID, percentage), value in dictionary.items():
     #%%
     
 
-        file_path = f"/home/hbt/jchr_data/jchr_racial_diff/results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
+        file_path = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
         
         
         with open(file_path, 'wb') as file:
@@ -363,7 +355,3 @@ for (PtID, percentage), value in dictionary.items():
         
     dict_results = {}
     
-    
-    
-
-# %%

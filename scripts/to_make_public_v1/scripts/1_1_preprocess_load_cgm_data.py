@@ -15,7 +15,7 @@ import datetime
 import numpy as np
 from my_utils import days_time_to_datetime
 #%% load data
-file_path = r"/home/hbt/jchr_data/_data/FDataCGM.txt"
+file_path = r"../data/FDataCGM.txt"
 df = pd.read_csv(file_path,sep='|')
 # df = pd.read_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/Data Tables/FDataCGM.txt',sep='|')
 df.drop(columns=['RecID','SiteID','FileUniqueRecID'], inplace = True)
@@ -88,4 +88,4 @@ nan_count = df_dataclean.isna().sum().sum()
 
 #%% export files
 
-# df_dataclean.to_csv(r'/Users/au605715/Documents/GitHub/jchr_racial_diff/Data/processed_data/1_1_racial_diff_dataclean.csv', index=False)
+df_dataclean.to_csv(r'../results/processed_data/1_1_racial_diff_dataclean.csv', index=False)
