@@ -19,7 +19,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
 
 
-file_path_df = r'/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_model_input_ws60min_ph60min.csv'
+file_path_df = r'../results/preprocessed_data/1_2_model_input_ws60min_ph60min.csv'
 # file_path_df = r'/Users/au605715/Documents/GitHub/study1/1_2_model_input_ws60min_ph60min.csv'
 df = pd.read_csv(file_path_df)
 
@@ -56,7 +56,6 @@ df.dropna(inplace=True)
 #                                 decay_rate))          # 6
 
 file_path_df_params = r'../results/preprocessed_data/2_1_remaining_params_v1.csv'
-# file_path_df = r'/Users/au605715/Documents/GitHub/study1/1_2_model_input_ws60min_ph60min.csv'
 df_params = pd.read_csv(file_path_df_params)
 
 # Convert back to list of tuples if necessary
@@ -65,8 +64,8 @@ remaining_params = list(df_params.to_records(index=False))
 
 part_size = len(remaining_params)//4
 
-# params = remaining_params[:part_size]
-params = remaining_params[part_size:2*part_size]
+params = remaining_params[:part_size]
+# list2 = remaining_params[part_size:2*part_size]
 # list3 = remaining_params[2*part_size:3*part_size]
 # list4 = remaining_params[3*part_size:]
 
@@ -193,17 +192,17 @@ for my_params in params:
     # Concatenate the new row with the existing DataFrame
     # results_df = pd.concat([results_df, new_row_df], ignore_index=True)
     
-    import os
+    # import os
     
-    # Define your directory and file path
-    directory = '/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data'
-    file_path = os.path.join(directory, '2_0_hyperparametertuning_v2_2.csv')
+    # # Define your directory and file path
+    # directory = '/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data'
+    # file_path = os.path.join(directory, '2_0_hyperparametertuning_v2_1.csv')
     
-    # Check if the directory exists, if not, create it
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+    # # Check if the directory exists, if not, create it
+    # if not os.path.exists(directory):
+    #     os.makedirs(directory)
     
-    # Now you can append to the CSV with the correct usage of os.path.isfile for checking the file existence
-    new_row_df.to_csv(file_path, mode='a', header=not os.path.isfile(file_path), index=False)
+    # # Now you can append to the CSV with the correct usage of os.path.isfile for checking the file existence
+    # new_row_df.to_csv(file_path, mode='a', header=not os.path.isfile(file_path), index=False)
 
     

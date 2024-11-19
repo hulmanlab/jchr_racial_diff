@@ -3,7 +3,8 @@
 """
 Created on Tue Feb  6 16:35:43 2024
 
-@author: au605715
+Running script multiple times on the cluster
+
 """
 
 #%% 
@@ -19,8 +20,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
 
 
-file_path_df = r'/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_model_input_ws60min_ph60min.csv'
-# file_path_df = r'/Users/au605715/Documents/GitHub/study1/1_2_model_input_ws60min_ph60min.csv'
+file_path_df = r'../results/preprocessed_data/1_2_model_input_ws60min_ph60min.csv'
 df = pd.read_csv(file_path_df)
 
 group_name = "Race"
@@ -28,35 +28,9 @@ group_name = "Race"
 df.drop(columns=["EduLevel", "Gender"], inplace=True)
 df.dropna(inplace=True)
 
+#%%
 
-
-
-
-#%%  Define hyperparameters for tuning
-
-
-# lay1_neurons = [64, 32, 16, 8]  # First LSTM layer neurons
-# lay2_neurons = [64, 32, 16, 8]  # Second LSTM layer neurons
-# activation_function = ['relu', 'tanh']
-# dropout_rates = [0.05, 0.1, 0.2, 0.25]      # Dropout rates
-# batch_size = [64, 128, 256, 512, 1024, 2048, 4096]
-# learning_rate = [0.01, 0.001]
-# decay_rate = [0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
-
-
-
-
-# # Create all possible combinations of hyperparameters
-# params = list(itertools.product(lay1_neurons, # 0
-#                                 lay2_neurons, # 1
-#                                 activation_function, # 2
-#                                 dropout_rates,       # 3
-#                                 batch_size,          # 4
-#                                 learning_rate,       # 5
-#                                 decay_rate))          # 6
-
-file_path_df_params = r'../results/preprocessed_data/2_1_remaining_params_v1.csv'
-# file_path_df = r'/Users/au605715/Documents/GitHub/study1/1_2_model_input_ws60min_ph60min.csv'
+file_path_df_params = r'../results/preprocessed_data/2_1_remaining_params.csv'
 df_params = pd.read_csv(file_path_df_params)
 
 # Convert back to list of tuples if necessary
@@ -65,9 +39,9 @@ remaining_params = list(df_params.to_records(index=False))
 
 part_size = len(remaining_params)//4
 
-# params = remaining_params[:part_size]
+params = remaining_params[:part_size]
 # list2 = remaining_params[part_size:2*part_size]
-params = remaining_params[2*part_size:3*part_size]
+# list3 = remaining_params[2*part_size:3*part_size]
 # list4 = remaining_params[3*part_size:]
 
 #%% Loop
@@ -191,13 +165,13 @@ for my_params in params:
                                     'test_rmse': rmse_test }])
     
     # Concatenate the new row with the existing DataFrame
-    # results_df = pd.concat([results_df, new_row_df], ignore_index=True)
+    results_df = pd.concat([results_df, new_row_df], ignore_index=True)
     
     import os
     
     # Define your directory and file path
-    directory = '/home/hbt/jchr_data/jchr_racial_diff/results/preprocessed_data'
-    file_path = os.path.join(directory, '2_0_hyperparametertuning_v2_3.csv')
+    directory = '../results/preprocessed_data'
+    file_path = os.path.join(directory, '2_0_hyperparametertuning_v2_1.csv')
     
     # Check if the directory exists, if not, create it
     if not os.path.exists(directory):
