@@ -2,6 +2,7 @@
 scripts/retired_scripts/
 scripts/slet.py
 /results
+scripts/for_myself/
 scripts/*job_script/
 scripts/*job_script_v6/
 scripts/*job_script*.sh
