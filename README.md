@@ -1,8 +1,8 @@
-# jchr_racial_diff
+# jchr_racial_diff [Work in progress]
 
-The scripts are still getting formatted and commented on
-Still need to upload script from hyperparameter tuning as well
-All the other scripts have been uploaded
+The scripts are still getting formatted and commented on \n
+Still need to upload script from hyperparameter tuning as well \n
+All the other scripts have been uploaded\n
 
 ## Project structure
 - scripts: This directory contains the scripts used for the analysis.
