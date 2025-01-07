@@ -177,7 +177,7 @@ for my_params in params:
     if not os.path.exists(directory):
         os.makedirs(directory)
     
-    # Now you can append to the CSV with the correct usage of os.path.isfile for checking the file existence
+    # Append to the CSV with the correct usage of os.path.isfile for checking the file existence
     new_row_df.to_csv(file_path, mode='a', header=not os.path.isfile(file_path), index=False)
 
     

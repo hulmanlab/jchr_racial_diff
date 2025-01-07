@@ -89,7 +89,7 @@ rmse_data$ratio10 <- rmse_data$ratio/10
 # ratio at 0 to 100 for all but naive
 # male = 43% (100-43 = 57) (male = 0) => 0.5707 (to increase the representation of males to 50%)
 # child = 40% 
-
+git pull
 # ratio at 0,50,100 for generalized model
 
 # w_0  <- c(1,0, 0, 0.4, 0.5707,0,0)
