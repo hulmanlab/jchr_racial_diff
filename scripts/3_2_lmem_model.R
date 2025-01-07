@@ -8,7 +8,7 @@ library(lme4)
 library(Epi)
 
 # load data
-file_path_race = '/Users/au605715/Documents/GitHub/study1/r_studio/3_1_calculated_results_v6_race_lmem_v2.csv'
+file_path_race = 'filepath/3_1_calculated_results_v6_race_lmem_v2.csv'
 rmse_data <- read.csv(file_path_race)
 # attach(rmse_data)
 head(rmse_data) # show dataframe
@@ -25,7 +25,7 @@ print(paste("Mean_single_tl: ", column_single_tl_mean))
 print(paste("Median_single_tl: ", column_single_tl_median))
 print(paste("Number of rows: ", df_length))
 
-rmse_data$train_size_naive <- 672
+rmse_data$train_size_naive <- 672 # 1 week with 15 min sampling frequency = 672
 
 
 # adding column to rmse_data named race_w and race_b. containing B and W letters 
@@ -64,15 +64,10 @@ rmse_data$ratio10 <- rmse_data$ratio/10
 # explain training size: We are centering and rescaling
 # we say that training size is about 510000 and because this value is much bigger then
 # age, sex and the other variables then the model do not like it so we set everything to zero
-# but basically we are checking what the values are at a training size of 510000
-
-# Male weight: 0.5 / 0.4 = 1.25 (to increase the representation of males to 50%)
-# Female weight: 0.5 / 0.6 = 0.8333 (to decrease the representation of females to 50%)
+# basically we are checking what the values are at a training size of 510000 or 4400
 
 
-
-
-# # # 
+# # # GENERALIZED MODEL PART # # # comment in and comment out the fine-tuned part
 # model <- "base"
 # train_size_model <- "base"
 # train_size_value <- 100000
@@ -91,43 +86,11 @@ rmse_data$ratio10 <- rmse_data$ratio/10
 #   
 # )
 
-model <- "tl"
-train_size_model <- "base"
-train_size_value <- 100000
-constant_value <- 5.1
-train_size_model_tl <- "single_tl"
-train_size_value_tl <- 1000
-constant_value_tl <- 4.4
+# ratio at 0 to 100 for all but naive
+# male = 43% (100-43 = 57) (male = 0) => 0.5707 (to increase the representation of males to 50%)
+# child = 40% 
 
-
-
-
-formula <- substitute(
-  rmse_var ~ ratio10*race_W +
-    age_A +
-    sex_M +
-    I(train_size_model / train_size_value - constant_value) +
-    I(train_size_model_tl / train_size_value_tl - constant_value_tl) +
-    (1 | PtID),
-    list(rmse_var = as.name(paste0("rmse_", model)),
-       train_size_model = as.name(paste0("train_size_", train_size_model)),
-       train_size_value = train_size_value,
-       constant_value = constant_value,
-       
-       train_size_model_tl = as.name(paste0("train_size_", train_size_model_tl)),
-       train_size_value_tl = train_size_value_tl,
-       constant_value_tl = constant_value_tl)
-
-)
-
-
-model_W_a_m <- lmer(formula, data = rmse_data)
-
-ci.lin(model_W_a_m)
-round(ci.lin(model_W_a_m),2)
-
-
-# ratio at 0,50,100 for all but not naive
+# ratio at 0,50,100 for generalized model
 
 # w_0  <- c(1,0, 0, 0.4, 0.5707,0,0)
 # w_10 <- c(1,1, 0, 0.4, 0.5707,0,0)
@@ -155,6 +118,45 @@ round(ci.lin(model_W_a_m),2)
 # b_100<- c(1,10,1, 0.4, 0.5707, 0,10)
 
 
+
+
+# # # FINE-TUNED MODEL PART # # # comment in and comment out the generalized model part
+
+model <- "tl"
+train_size_model <- "base"
+train_size_value <- 100000
+constant_value <- 5.1
+train_size_model_tl <- "single_tl"
+train_size_value_tl <- 1000
+constant_value_tl <- 4.4
+
+formula <- substitute(
+  rmse_var ~ ratio10*race_W +
+    age_A +
+    sex_M +
+    I(train_size_model / train_size_value - constant_value) +
+    I(train_size_model_tl / train_size_value_tl - constant_value_tl) +
+    (1 | PtID),
+  list(rmse_var = as.name(paste0("rmse_", model)),
+       train_size_model = as.name(paste0("train_size_", train_size_model)),
+       train_size_value = train_size_value,
+       constant_value = constant_value,
+       
+       train_size_model_tl = as.name(paste0("train_size_", train_size_model_tl)),
+       train_size_value_tl = train_size_value_tl,
+       constant_value_tl = constant_value_tl)
+  
+)
+
+
+model_W_a_m <- lmer(formula, data = rmse_data)
+
+ci.lin(model_W_a_m)
+round(ci.lin(model_W_a_m),2)
+
+
+
+# ratio at 0,50,100 for fine-tuned model
 w_0  <- c(1,0, 0, 0.4, 0.5707,0,0,0)
 w_10 <- c(1,1, 0, 0.4, 0.5707,0,0,0)
 w_20 <- c(1,2, 0, 0.4, 0.5707,0,0,0)
@@ -180,7 +182,7 @@ b_80 <- c(1,8, 1, 0.4, 0.5707, 0,0,8)
 b_90 <- c(1,9, 1, 0.4, 0.5707, 0,0,9)
 b_100<- c(1,10,1, 0.4, 0.5707, 0,0,10)
 
-######################################
+############# Show results from models#########################
 
 
 # white
@@ -216,7 +218,7 @@ combined_results <- data.frame(
 )
 
 # Optionally, save the results to a CSV file
-# write.csv(combined_results, "/Users/au605715/Documents/GitHub/study1/r_studio/combined_results_tl3.csv", row.names = FALSE)
+# write.csv(combined_results, "filepath/filename", row.names = FALSE)
 
 # ############################## Compare differences between white and black ##########################################
 
