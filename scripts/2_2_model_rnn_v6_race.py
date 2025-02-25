@@ -16,67 +16,51 @@ from sklearn.model_selection import GroupShuffleSplit
 import datetime
 from tensorflow import keras
 
-def split_data_black_white_ratio_in_loop (df_group1, df_group2, ratio):
-
-    """
-    split data depending on the ratio of PtIDs from each group
-    
-    Parameters
-    ----------
-    df_group1 : Dataframe
-        df containing data from group1
-    df_group2 : Dataframe
-        df containing data from group2.
-    ratio : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    x_train : TYPE
-        data to train on.
-    y_train : TYPE
-        labels for data to train on.
-    x_val : TYPE
-        data to validate on (or test).
-    y_val : TYPE
-        labels for data to validate on (or test).
-
-    """
-    # split based on PtID
-    if percentage == 100: #  if there are no patients in group 2
-    
-        gss = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-        train_idx, val_test_idx = next(gss.split(df_group1, groups=df_group1['PtID']))
-    
-        x_train_temp1 = df_group1.iloc[train_idx]
-        x_val_temp1 = df_group1.iloc[val_test_idx]
-    
-        x_train, y_train, x_val, y_val = my_utils.seperate_the_target(x_train_temp1, x_val_temp1)
-    
-    elif percentage == 0: # if there are no patients in group 1
-     
-        gss = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42) 
-        train_idx, test_idx = next(gss.split(df_group2, groups=df_group2['PtID']))
-    
-        x_train_temp2 = df_group2.iloc[train_idx]
-        x_val_temp2 = df_group2.iloc[test_idx]
-    
-        x_train, y_train, x_val, y_val = my_utils.seperate_the_target(x_train_temp2, x_val_temp2)
-        
-    else: # if there are patients in group 2
-        x_train, y_train, x_val, y_val = my_utils.get_groupShuflesplit_equal_groups(df_group1, df_group2,test_size=0.2, seperate_target=True)     # split based on PtID
-    
-    return x_train, y_train, x_val, y_val
 
 
-#                    load data
-file_path_df = r'../results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.csv'
+                #    load data
+
+file_path_df = '../results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.csv'
+
+
 df = pd.read_csv(file_path_df)
 
 
+group_name = "Race" #  Gender, ageAtEnroll
 
-# Specify the file path
-file_path = "../results/preprocessed_data/1_3_data_split_race_v6_2.pkl"
+def choose_group (df, group_name="ageAtEnroll"): # Race, ageAtEnroll
+    """_summary_
+
+    Args:
+        df (_type_): dataset
+        group_name (str, optional): What group to use. Defaults to "Race".
+
+    Raises:
+        ValueError: if none of the groups are recognized
+
+    Returns:
+        tuple: (group_name, modified DataFrame, file_path)
+    """
+
+    
+    if group_name == "Race":
+        df.drop(columns=['Gender','EduLevel','ageAtEnroll'], inplace = True, errors='ignore')
+        file_path = "../results/preprocessed_data/1_3_data_split_race_v6_2.pkl"
+    # elif group_name == "Gender":
+    #     df.drop(columns=['Race','EduLevel','ageAtEnroll'], inplace = True)
+        
+    elif group_name == "ageAtEnroll":
+        df.drop(columns=['Race','EduLevel','Gender'], inplace = True, errors='ignore')
+        file_path = "../results/preprocessed_data/1_3_data_split_age_v6_2.pkl"
+                
+    else:
+        raise ValueError("Inputs must be string and either Race or ageAtEnroll")
+        df.dropna(inplace=True)
+    
+    return group_name, df, file_path
+    
+
+group_name, df, file_path = choose_group(df, group_name="ageAtEnroll")
 
 # Read from file
 with open(file_path, 'rb') as file:
@@ -85,9 +69,6 @@ with open(file_path, 'rb') as file:
 #%%                     extract data from dictionary
 
 testing_mode = False
-group_name = "Race" #  Gender, EduLevel
-df.drop(columns=['Gender','EduLevel','ageAtEnroll'], inplace = True)
-df.dropna(inplace=True)
 
 
 dict_results = {}
@@ -111,12 +92,12 @@ for (PtID, percentage), value in dictionary.items():
     
 
 
-#%%                split dataset80/20 
+#                split dataset80/20 
     
     # x_train, y_train, x_val, y_val = split_data_group_ratio_in_loop(df_train_m, df_train_f, percentage)
    
 
-#%%                     split dataset using one week of data to validate on the rest
+#                    split dataset using one week of data to validate on the rest
 
     df_train_gr12 = pd.concat([df_train_gr1, df_train_gr2], ignore_index=True)
     df_train_gr12.reset_index
@@ -124,24 +105,26 @@ for (PtID, percentage), value in dictionary.items():
     # split within patients, train/val
     x_train, y_train, x_val, y_val = my_utils.split_within_PtID(df_train_gr12, numb_values_to_remove=-672, seperate_target=True, group_column=group_name) # split witin  PtID: 4values/hour * 24hour/day * 7days/week = 672 values/week
 
-    print('ged 1')
-    #%%                   Fine- tuning: split data
+    print('test 1')
+    #                   Fine- tuning: split data
     
 
     # split within patients, train/test
     xy_train_tl, xy_test_tl = my_utils.split_within_PtID(df_test, numb_values_to_remove=-672, seperate_target=False, group_column=group_name) # split witin  PtID: 4values/hour * 24hour/day*7days/week = 672 values/week
 
     # baseline_test_tl = xy_test_tl['Value_4']
-    print('ged 2')    
+    print('test 2')    
 
     # split train in train/val with seperate targets
     x_train_tl, y_train_tl, x_val_tl, y_val_tl = my_utils.split_time_series_data(xy_train_tl, test_size=0.15, group_column=group_name)
-    print('ged 3')
+    print('test 3')
     
     # seperate target from test
     x_test_tl, y_test_tl = my_utils.seperate_the_target(xy_test_tl, group_column=group_name)
-    print('ged 4')
-#%%                   Scale data
+    print('test 4')
+
+
+#                   Scale data
     # min max normalization [0,1]
     scaler_x = MinMaxScaler()
     scaler_x.fit(x_train)
@@ -182,7 +165,7 @@ for (PtID, percentage), value in dictionary.items():
     y_test_tl = scaler_tl_y.transform(y_test_tl.values.reshape(-1, 1))
     
 
-#%%                     Transform input to the rnn
+#                     Transform input to the rnn
     x_train = pd.DataFrame(x_train_scal)
     x_val = pd.DataFrame(x_val_scal)
     
@@ -199,7 +182,7 @@ for (PtID, percentage), value in dictionary.items():
     x_val_tl = my_utils.get_rnn_input(x_val_tl)
     x_test_tl = my_utils.get_rnn_input(x_test_tl)
 
-#%%                     Model and evaluation for ONLY test person
+#                     Model and evaluation for ONLY test person
 
     model_single = my_utils.create_lstm_vanDoorn_updated((x_train.shape[1]))
     
@@ -229,7 +212,7 @@ for (PtID, percentage), value in dictionary.items():
     y_pred_single = model_single.predict(x_test_tl)
 
 
-#%%                     Model and evaluation
+#                     Model and evaluation
 
     model_base = my_utils.create_lstm_vanDoorn_updated((x_train.shape[1]))
     
@@ -255,7 +238,7 @@ for (PtID, percentage), value in dictionary.items():
     y_pred_test = model_base.predict(x_test_tl)
 
     
-#%%                        Fine-tune the model   
+#                        Fine-tune the model   
     lr_schedule_tl = tf.keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate = 0.0001,
     decay_steps=decay_steps,
@@ -282,7 +265,7 @@ for (PtID, percentage), value in dictionary.items():
 
 
 
-#%% Scale y_label back
+# Scale y_label back
 
     y_test_tl = scaler_tl_y.inverse_transform(y_test_tl) # The answer
     
@@ -294,7 +277,7 @@ for (PtID, percentage), value in dictionary.items():
     
     y_pred_single = scaler_tl_y.inverse_transform(y_pred_single)
     
-    #%% My actual/true values and my baseline value
+    # My actual/true values and my baseline value
     
     y_actual_tl = y_test_tl
     # y_last_val_tl = baseline_test_tl.to_numpy()
@@ -341,17 +324,21 @@ for (PtID, percentage), value in dictionary.items():
     
     
     if testing_mode==True:
+        print("testing mode completed YAY")
         break
     if testing_mode == False:
-    #%%
-    
-
-        file_path = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
+        # file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
+        file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v1/patient{PtID}_ratio{percentage}.pkl"
+        if os.path.exists(file_path_save):
+            print("✅ File exists:", file_path_save)
         
+        else:
+            print("❌ File NOT found. Check path!")
         
-        with open(file_path, 'wb') as file:
+        with open(file_path_save, 'wb') as file:
             # Serialize and save the list to the file
             pickle.dump(dict_results, file)
         
     dict_results = {}
     
+# %%
