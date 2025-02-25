@@ -600,24 +600,6 @@ def split_time_series_data(df, test_size, seperate_target=True, group_column ="g
 
 
 #reshape input
-def get_cnn1d_input (x_data):
-    """
-    Descriptions
-    ------------
-    reshapes time series input into a shape that cnn1D cant take
-    Parameters
-    ----------
-    x_data : DataFrames
-        training data
-
-    Returns
-    -------
-    x_train_reshape : array of floats
-        N x l_window x 1
-
-    """
-    x_train_reshape = x_data.values.reshape((x_data.shape[0], x_data.shape[1], 1))
-    return x_train_reshape
 
 def get_rnn_input (x_data):
     """
@@ -638,79 +620,25 @@ def get_rnn_input (x_data):
     x_train_reshape = x_data.values.reshape(-1, x_data.shape[1], 1)
     return x_train_reshape
 
-def create_cnn1(my_input_shape):
-    from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Dropout, BatchNormalization
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense
-    import tensorflow as tf
-    from tensorflow import keras
-    
-    model = tf.keras.Sequential([
-        Conv1D(32, 3, activation='relu', input_shape=(my_input_shape,1)),
-        BatchNormalization(),
-        MaxPooling1D(),
-        Flatten(),
-        Dense(32, activation='relu'),
-        Dense(1, activation='linear')
-    ])
-    
-    return model
 
-
-
-
-
-def create_basic_rnn_vanDoorn(input_length):
-    from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import Input, SimpleRNN, Bidirectional, Dense, Dropout
-    from tensorflow.keras.optimizers import Adam
-
-    # input layer
-    input_layer = Input(batch_shape=(None, input_length, 1))
-
-    # first layer with 32 neurons
-    layer1 = Bidirectional(SimpleRNN(32, activation='relu'), input_shape=(input_length, 1))(input_layer)
-
-    layer2 = Dense(16)(layer1)
-
-    # Dropout
-    layer3 = Dropout(0.1)(layer2)
-
-    # pred horizons
-    output_layer = Dense(1, name='output')(layer3)
-    
-    model = Model(inputs=input_layer, outputs=output_layer)
-    
-    # Compile the model
-
-    return model
 
 def create_lstm_vanDoorn(input_length):
     from tensorflow.keras.models import Model
     from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
 
-    # input layer
+
     input_layer = Input(shape=(input_length, 1))
-
-    # first LSTM layer with 32 neurons and returning sequences
     lstm_layer1 = LSTM(32, return_sequences=True)(input_layer)
-
-    # second LSTM layer with 16 neurons
     lstm_layer2 = LSTM(16)(lstm_layer1)
-
-    # Dropout
     dropout_layer = Dropout(0.05)(lstm_layer2)
-
-    # output layer
     output_layer = Dense(1, name='output')(dropout_layer)
-    
-    # creating the model
     model = Model(inputs=input_layer, outputs=output_layer)
     
     # Compile the model
     model.compile(optimizer='adam', loss='mean_squared_error')
 
     return model
+
 
 def create_lstm_vanDoorn_updated(input_length):
     from tensorflow.keras.models import Model
@@ -726,28 +654,6 @@ def create_lstm_vanDoorn_updated(input_length):
     # model.compile(optimizer='adam', loss='mean_squared_error')
 
     return model
-
-
-def create_rnn(my_input_shape):
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import SimpleRNN, Dense
-    from tensorflow import keras
-    model = Sequential([
-        SimpleRNN(32, input_shape=(4, 1), activation='tanh'),
-        # BatchNormalization(),
-        Dense(1)
-    ])
-    # from tensorflow.keras.layers import LSTM, Dense
-    # model = Sequential([
-    #     LSTM(32, input_shape=(4, 1), activation='tanh'),
-    #     Dense(1)
-    # ])
-    
-    
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    return model
-
-
 
 #%% result calculations
 
