@@ -21,7 +21,7 @@ import os
                 #    load data
 
 file_path_df = '../results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.csv'
-
+# file_path_df='jchr_data/jchr_racial_diff/results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.csv'
 
 df = pd.read_csv(file_path_df)
 
@@ -329,13 +329,12 @@ for (PtID, percentage), value in dictionary.items():
     if testing_mode == False:
         # file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
         file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v2/patient{PtID}_ratio{percentage}.pkl"
-        
         # if os.path.exists(file_path_save):
-        #     print("✅ Filepath exists:", file_path_save)
+        #     print("✅ File exists:", file_path_save)
         
         # else:
-        #     print("❌ Filepath NOT found. Check path!")
-        
+        #     print("❌ File NOT found. Check path!")
+        print("trying to save file for person:", PtID, "ratio:", percentage)
         with open(file_path_save, 'wb') as file:
             # Serialize and save the list to the file
             pickle.dump(dict_results, file)

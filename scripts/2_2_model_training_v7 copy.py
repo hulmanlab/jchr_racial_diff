@@ -328,13 +328,12 @@ for (PtID, percentage), value in dictionary.items():
         break
     if testing_mode == False:
         # file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
-        file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v2/patient{PtID}_ratio{percentage}.pkl"
+        file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v1/patient{PtID}_ratio{percentage}.pkl"
+        if os.path.exists(file_path_save):
+            print("✅ File exists:", file_path_save)
         
-        # if os.path.exists(file_path_save):
-        #     print("✅ Filepath exists:", file_path_save)
-        
-        # else:
-        #     print("❌ Filepath NOT found. Check path!")
+        else:
+            print("❌ File NOT found. Check path!")
         
         with open(file_path_save, 'wb') as file:
             # Serialize and save the list to the file
