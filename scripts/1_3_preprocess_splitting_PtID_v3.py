@@ -51,7 +51,7 @@ df_baseline['EduLevel'] = df_baseline['EduLevel'].replace(edu_mapping)
 #%%
 df_roster2 = pd.read_csv(r'../data_2/FPtRosterNew.txt', sep='|')
 df_roster2['ageAtEnroll'] = df_roster2['ageAtEnroll'].apply(lambda x: 2 if x > 17 else 1) # Children =group1, Adults =group2
-
+df_roster2= df_roster2[df_roster2['FPtStatus'] != 'Dropped']
 #%%
 def split_ptid(df,group_column, group1, group2, id_column="PtID"):
     
@@ -95,7 +95,7 @@ def split_ptid(df,group_column, group1, group2, id_column="PtID"):
                 PtID_gr2 = larger_group
                 PtID_gr1 = smaller_group
                 print(PtID_gr1)
-                print('goat')
+                print('test')
     
             # Remove test PtID from ID
             if PtID in PtID_gr1: 
@@ -143,8 +143,8 @@ dictionary_age = split_ptid(df=df_roster2, group_column="ageAtEnroll", group1=1,
 
 
 # %%  Specify the file path
-file_path_race = "../results/preprocessed_data/1_3_data_split_race_v6_2.pkl"
-file_path_age = "../results/preprocessed_data/1_3_data_split_age_v6_2.pkl"
+file_path_race = "../results/preprocessed_data/1_3_data_split_race_v6_3.pkl"
+file_path_age = "../results/preprocessed_data/1_3_data_split_age_v6_3.pkl"
 # Write to file
 with open(file_path_race, 'wb') as file:
     pickle.dump(dictionary_race, file)

@@ -51,7 +51,7 @@ def choose_group (df, group_name="ageAtEnroll"): # Race, ageAtEnroll
         
     elif group_name == "ageAtEnroll":
         df.drop(columns=['Race','EduLevel','Gender'], inplace = True, errors='ignore')
-        file_path = "../results/preprocessed_data/1_3_data_split_age_v6_2.pkl"
+        file_path = "../results/preprocessed_data/1_3_data_split_age_v6_3.pkl"
                 
     else:
         raise ValueError("Inputs must be string and either Race or ageAtEnroll")
@@ -328,17 +328,19 @@ for (PtID, percentage), value in dictionary.items():
         break
     if testing_mode == False:
         # file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
-        file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v2/patient{PtID}_ratio{percentage}.pkl"
+        file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v3/patient{PtID}_ratio{percentage}.pkl"
         
-        # if os.path.exists(file_path_save):
-        #     print("✅ Filepath exists:", file_path_save)
-        
-        # else:
-        #     print("❌ Filepath NOT found. Check path!")
-        
-        with open(file_path_save, 'wb') as file:
+        if os.path.exists(file_path_save):
+            print("✅ Filepath exists:", file_path_save)
+            
+            with open(file_path_save, 'wb') as file:
             # Serialize and save the list to the file
-            pickle.dump(dict_results, file)
+                pickle.dump(dict_results, file)
+        
+        else:
+            print("❌ Filepath NOT found. Check path!")
+        
+
         
     dict_results = {}
     
