@@ -3,7 +3,7 @@
 """
 Created on Mon Nov 20 16:19:13 2023
 
-@author: au605715
+Change the directories, the group_name and where you save the files
 """
 #%%
 import pandas as pd
@@ -24,9 +24,9 @@ file_path_df = '../results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.
 
 
 df = pd.read_csv(file_path_df)
+df.dropna(inplace=True)
 
-
-group_name = "Race" #  Gender, ageAtEnroll
+group_name = "ageAtEnroll" #  Gender, ageAtEnroll
 
 def choose_group (df, group_name="ageAtEnroll"): # Race, ageAtEnroll
     """_summary_
@@ -51,7 +51,7 @@ def choose_group (df, group_name="ageAtEnroll"): # Race, ageAtEnroll
         
     elif group_name == "ageAtEnroll":
         df.drop(columns=['Race','EduLevel','Gender'], inplace = True, errors='ignore')
-        file_path = "../results/preprocessed_data/1_3_data_split_age_v6_3.pkl"
+        file_path = "../results/preprocessed_data/1_3_data_split_age_v6_2.pkl"
                 
     else:
         raise ValueError("Inputs must be string and either Race or ageAtEnroll")
@@ -60,7 +60,7 @@ def choose_group (df, group_name="ageAtEnroll"): # Race, ageAtEnroll
     return group_name, df, file_path
     
 
-group_name, df, file_path = choose_group(df, group_name="ageAtEnroll")
+group_name, df, file_path = choose_group(df, group_name=group_name)
 
 # Read from file
 with open(file_path, 'rb') as file:
@@ -68,7 +68,7 @@ with open(file_path, 'rb') as file:
     
 #%%                     extract data from dictionary
 
-testing_mode = False
+testing_mode = True
 
 
 dict_results = {}
@@ -294,6 +294,10 @@ for (PtID, percentage), value in dictionary.items():
         "y_pred": y_pred_test,
         "y_pred_tl": y_pred_test_tl,
         
+        "train_size_single_tl":len(x_train_tl),
+        "train_size_base":len(x_train),
+        "train_size_naive":len(x_test_tl),
+
         'epochs': len(history.history['loss']),
         'epochs_tl': len(history_tl.history['loss']),
         'epochs_single': len(history_single.history['loss']),
@@ -328,18 +332,15 @@ for (PtID, percentage), value in dictionary.items():
         break
     if testing_mode == False:
         # file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_race2/patient{PtID}_ratio{percentage}.pkl"
-        file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v3/patient{PtID}_ratio{percentage}.pkl"
-        
-        if os.path.exists(file_path_save):
-            print("✅ Filepath exists:", file_path_save)
+        file_path_save = f"../results/processed_data/2_1_1_predicted_results_rnn_v6_{group_name}_v2/patient{PtID}_ratio{percentage}.pkl"
+   
+
             
-            with open(file_path_save, 'wb') as file:
+        with open(file_path_save, 'wb') as file:
             # Serialize and save the list to the file
-                pickle.dump(dict_results, file)
+            pickle.dump(dict_results, file)
         
-        else:
-            print("❌ Filepath NOT found. Check path!")
-        
+
 
         
     dict_results = {}
