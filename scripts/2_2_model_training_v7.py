@@ -68,7 +68,7 @@ with open(file_path, 'rb') as file:
     
 #%%                     extract data from dictionary
 
-testing_mode = True
+testing_mode = False
 
 
 dict_results = {}
