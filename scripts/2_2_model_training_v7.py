@@ -24,7 +24,8 @@ file_path_df = '../results/preprocessed_data/1_2_model_input_ws60min_ph60min_v6.
 
 
 df = pd.read_csv(file_path_df)
-df.dropna(inplace=True)
+df.drop(columns = 'EduLevel', inplace=True)
+df = df.dropna()
 
 group_name = "ageAtEnroll" #  Gender, ageAtEnroll
 

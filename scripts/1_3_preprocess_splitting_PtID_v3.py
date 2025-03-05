@@ -143,11 +143,11 @@ dictionary_age = split_ptid(df=df_roster2, group_column="ageAtEnroll", group1=1,
 
 
 # %%  Specify the file path
-file_path_race = "../results/preprocessed_data/1_3_data_split_race_v6_3.pkl"
+# file_path_race = "../results/preprocessed_data/1_3_data_split_race_v6_3.pkl"
 file_path_age = "../results/preprocessed_data/1_3_data_split_age_v6_3.pkl"
 # Write to file
-with open(file_path_race, 'wb') as file:
-    pickle.dump(dictionary_race, file)
+# with open(file_path_race, 'wb') as file:
+#     pickle.dump(dictionary_race, file)
     
 with open(file_path_age, 'wb') as file:
     pickle.dump(dictionary_age, file)
