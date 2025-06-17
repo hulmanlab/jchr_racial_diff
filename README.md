@@ -1,10 +1,7 @@
-# jchr_racial_diff [Work in progress]
+# Racial disparities in continuous glucose monitoring-based 60-min glucose predictions among people with type 1 diabetes
 
-The scripts are still getting formatted and commented on
 
 Still need to upload script from hyperparameter tuning as well
-
-All the other scripts have been uploaded
 
 
 ## Project structure
