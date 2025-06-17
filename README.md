@@ -1,7 +1,5 @@
 # Racial disparities in continuous glucose monitoring-based 60-min glucose predictions among people with type 1 diabetes
-
-
-Still need to upload script from hyperparameter tuning as well
+This repository includes the code for the following publication: [MedRxiv](https://www.medrxiv.org/content/10.1101/2024.12.19.24319325v1)
 
 
 ## Project structure
